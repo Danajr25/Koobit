@@ -76,6 +76,7 @@ class AppColors {
     Color(0xFF8B5CF6),  // Phase 10 - Neon Violet
     Color(0xFF00FFAA),  // Phase 11 - Neon Mint
     Color(0xFFFF4D6D),  // Phase 12 - Neon Coral
+    Color(0xFF38BDF8),  // Phase 13 - Sky Blue
   ];
 
   // Game Colors - Cyber theme

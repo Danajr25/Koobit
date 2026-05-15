@@ -77,6 +77,7 @@ enum LevelType {
   polynomials,
   factorization,
   quadratic,
+  pythagorean,
 }
 
 /// All learning phases with their levels
@@ -632,6 +633,64 @@ class LevelConfiguration {
           descriptionEn: 'ax² + bx + c = 0',
           descriptionMs: 'ax² + bx + c = 0',
           type: LevelType.quadratic,
+        ),
+      ],
+    ),
+
+    // Phase 13: Pythagorean Theorem
+    LearningPhase(
+      phaseNumber: 13,
+      nameEn: 'Pythagorean Theorem',
+      nameMs: 'Teorem Pythagoras',
+      color: AppColors.phaseColors[12],
+      levels: [
+        LevelConfig(
+          level: 57,
+          topicEn: 'Intro to Pythagorean Theorem',
+          topicMs: 'Pengenalan Teorem Pythagoras',
+          descriptionEn: 'a² + b² = c² — label sides, find hypotenuse',
+          descriptionMs: 'a² + b² = c² — labelkan sisi, cari hipotenus',
+          type: LevelType.pythagorean,
+        ),
+        LevelConfig(
+          level: 58,
+          topicEn: 'Perfect Square Triangles',
+          topicMs: 'Segi Tiga Kuasa Dua Sempurna',
+          descriptionEn: 'Find hypotenuse using perfect square triples',
+          descriptionMs: 'Cari hipotenus menggunakan triplet kuasa dua sempurna',
+          type: LevelType.pythagorean,
+        ),
+        LevelConfig(
+          level: 59,
+          topicEn: 'Non-Perfect Square Problems',
+          topicMs: 'Masalah Bukan Kuasa Dua Sempurna',
+          descriptionEn: 'Calculate hypotenuse by computation',
+          descriptionMs: 'Kira hipotenus melalui pengiraan',
+          type: LevelType.pythagorean,
+        ),
+        LevelConfig(
+          level: 60,
+          topicEn: 'Word Problems',
+          topicMs: 'Masalah Bertulis',
+          descriptionEn: 'Real-world Pythagorean problems',
+          descriptionMs: 'Masalah Pythagoras dunia sebenar',
+          type: LevelType.pythagorean,
+        ),
+        LevelConfig(
+          level: 61,
+          topicEn: 'Algebraic Pythagoras',
+          topicMs: 'Pythagoras Algebra',
+          descriptionEn: 'Combined algebra and geometry',
+          descriptionMs: 'Gabungan algebra dan geometri',
+          type: LevelType.pythagorean,
+        ),
+        LevelConfig(
+          level: 62,
+          topicEn: 'Distance Formula',
+          topicMs: 'Formula Jarak',
+          descriptionEn: '√[(x₂-x₁)² + (y₂-y₁)²]',
+          descriptionMs: '√[(x₂-x₁)² + (y₂-y₁)²]',
+          type: LevelType.pythagorean,
         ),
       ],
     ),

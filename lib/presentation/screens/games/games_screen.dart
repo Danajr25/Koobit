@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,7 +115,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     _inventory = _decodeInventory(prefs.getString('$_inventoryPrefix${_child.id}') ?? '{}');
 
     setState(() {
-      _hasWorksheetAccess = _child.currentLevel > 1 || _child.lastWorksheetDate != null;
+      _hasWorksheetAccess = kDebugMode || _child.currentLevel > 1 || _child.lastWorksheetDate != null;
       _unlockedLevels = unlockedLevels;
       _highScores = highScores;
       _isLoading = false;
@@ -138,6 +139,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
   }
 
   int _maxUnlockedForGame() {
+    if (kDebugMode) return 10; // dev: all game levels accessible
     final unlocked = _child.currentLevel + 1;
     return unlocked.clamp(1, 10);
   }
@@ -985,7 +987,7 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                         children: [
                           Expanded(
                             child: CyberButton(
-                                text: 'Hint (${_hintCount})',
+                                text: 'Hint ($_hintCount)',
                               onPressed: _useHint,
                               color: AppColors.accent,
                                 height: 44,
@@ -994,7 +996,7 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: CyberButton(
-                                text: 'Shield (${_shieldCount})',
+                                text: 'Shield ($_shieldCount)',
                               onPressed: null,
                               color: AppColors.success,
                                 height: 44,
@@ -1003,7 +1005,7 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: CyberButton(
-                                text: '2x (${_doublePointsCount})',
+                                text: '2x ($_doublePointsCount)',
                               onPressed: _useDoublePoints,
                               color: AppColors.secondary,
                                 height: 44,
@@ -1070,7 +1072,6 @@ class _GameDefinition {
     required this.icon,
     required this.accent,
     required this.rewardPattern,
-    this.tokenCost = 1,
   });
 }
 

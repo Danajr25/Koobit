@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -379,6 +380,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
   }
 
   LevelStatus _getLevelStatus(int levelNumber) {
+    if (kDebugMode) return LevelStatus.unlocked; // dev: all levels accessible
     final currentLevel = widget.child.currentLevel;
     
     if (levelNumber < currentLevel) {
@@ -410,7 +412,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
         phaseColor: phaseColor,
         languageCode: languageCode,
         l10n: l10n,
-        onStart: status == LevelStatus.inProgress
+        onStart: (kDebugMode || status == LevelStatus.inProgress)
             ? () {
                 Navigator.pop(context);
                 context.push('/worksheet', extra: {

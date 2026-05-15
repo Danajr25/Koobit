@@ -18,6 +18,7 @@ import '../presentation/screens/corrections/corrections_screen.dart';
 import '../presentation/screens/calendar/calendar_screen.dart';
 import '../presentation/screens/performance/performance_screen.dart';
 import '../presentation/screens/settings/settings_screen.dart';
+import '../presentation/screens/subscription/subscription_screen.dart';
 import '../presentation/screens/parent_dashboard/parent_dashboard_screen.dart';
 import '../data/models/question_model.dart';
 import '../core/constants/game_routes.dart';
@@ -268,7 +269,7 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.subscription,
-          builder: (context, state) => const _PlaceholderScreen(title: 'Subscription'),
+          builder: (context, state) => const SubscriptionScreen(),
         ),
         GoRoute(
           path: AppRoutes.parentDashboard,

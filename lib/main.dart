@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'app/app_router.dart';
 import 'core/constants/env.dart';
 import 'core/constants/app_theme.dart';
 import 'core/services/supabase_service.dart';
+import 'core/services/locale_notifier.dart';
 import 'core/l10n/app_localizations.dart';
 import 'data/repositories/repositories.dart';
 import 'presentation/blocs/auth/auth.dart';
@@ -36,13 +38,17 @@ void main() async {
     anonKey: Env.supabaseAnonKey,
   );
 
+  // Read stored locale before first frame
+  final localeNotifier = await LocaleNotifier.create();
+
   // Run the app
-  runApp(const MathLearningApp());
+  runApp(MathLearningApp(localeNotifier: localeNotifier));
 }
 
 /// Main app widget
 class MathLearningApp extends StatelessWidget {
-  const MathLearningApp({super.key});
+  final LocaleNotifier localeNotifier;
+  const MathLearningApp({super.key, required this.localeNotifier});
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +64,10 @@ class MathLearningApp extends StatelessWidget {
           create: (_) => WorksheetRepository(),
         ),
       ],
-      child: const AppView(),
+      child: ChangeNotifierProvider<LocaleNotifier>.value(
+        value: localeNotifier,
+        child: const AppView(),
+      ),
     );
   }
 }
@@ -92,6 +101,7 @@ class _AppViewState extends State<AppView> {
 
   @override
   Widget build(BuildContext context) {
+    final localeNotifier = context.watch<LocaleNotifier>();
     return BlocProvider.value(
       value: _authBloc,
       child: MaterialApp.router(
@@ -100,6 +110,7 @@ class _AppViewState extends State<AppView> {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.lightTheme,
         themeMode: ThemeMode.light,
+        locale: localeNotifier.locale,
         localizationsDelegates: const [
           AppLocalizations.delegate,
         ],

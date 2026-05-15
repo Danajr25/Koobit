@@ -107,7 +107,7 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
         // If passed, check if we should advance level
         if (event.passed) {
           final currentLevel = updatedChild.currentLevel;
-          if (event.levelNumber >= currentLevel && event.levelNumber < 54) {
+          if (event.levelNumber >= currentLevel && event.levelNumber < 62) {
             // Advance to next level
             updatedChild = await _childRepository.updateLevel(
               event.child.id,

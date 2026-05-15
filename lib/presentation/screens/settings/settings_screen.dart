@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/services/locale_notifier.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/auth/auth.dart';
 import '../../widgets/cyber_widgets.dart';
 
@@ -44,32 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _saveLanguageSetting(String code) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.languageKey, code);
+    await context.read<LocaleNotifier>().setLocale(code);
     setState(() => _selectedLanguage = code);
-    // TODO: Trigger app-wide locale change via LocaleBloc/Cubit
-    _showRestartDialog();
-  }
-
-  void _showRestartDialog() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(l10n.language, style: const TextStyle(color: AppColors.textPrimary)),
-        content: const Text(
-          'Please restart the app to apply the language change.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.ok, style: const TextStyle(color: AppColors.primary)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showLogoutConfirmation() {
@@ -151,6 +130,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                       // Account Section
                       _buildSectionHeader('Account'),
+                      _buildSettingsTile(
+                        icon: Icons.credit_card_rounded,
+                        title: 'Manage Subscription',
+                        onTap: () => context.push('/subscription'),
+                      ),
                       _buildSettingsTile(
                         icon: Icons.lock_outline_rounded,
                         title: l10n.changePassword,
@@ -301,7 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: _notificationsEnabled,
             onChanged: _saveNotificationSetting,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -460,12 +444,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement password change
+            onPressed: () async {
+              final newPassword = newController.text.trim();
+              final confirm = confirmController.text.trim();
+
+              if (newPassword.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password must be at least 6 characters.')),
+                );
+                return;
+              }
+              if (newPassword != confirm) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match.')),
+                );
+                return;
+              }
+
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Password updated successfully')),
-              );
+              try {
+                await context.read<AuthRepository>().updatePassword(newPassword);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Password updated successfully.')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update password: $e')),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: Text(l10n.save),
@@ -535,12 +545,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement parent PIN change
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Parent PIN updated successfully')),
-              );
+            onPressed: () async {
+              final currentPin = currentController.text.trim();
+              final newPin = newController.text.trim();
+
+              final prefs = await SharedPreferences.getInstance();
+              final storedPin = prefs.getString('parent_pin') ?? '1234';
+
+              if (currentPin != storedPin) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Current PIN is incorrect.')),
+                );
+                return;
+              }
+              if (newPin.length != 4) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('New PIN must be exactly 4 digits.')),
+                );
+                return;
+              }
+
+              await prefs.setString('parent_pin', newPin);
+              if (mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Parent PIN updated successfully.')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: Text(l10n.save),

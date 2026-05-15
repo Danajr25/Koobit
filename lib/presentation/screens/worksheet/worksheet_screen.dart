@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
@@ -46,7 +47,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   int _currentPage = 0; // Track current page (0-9 for 10 pages)
   bool _isSubmitting = false;
   Timer? _timer;
-  int _secondsRemaining = 900; // 15 minutes per requirements
+  int _secondsRemaining = kDebugMode ? 120 : 900; // dev: 2 min | prod: 15 min
   bool _worksheetCompleted = false;
   // ignore: unused_field - reserved for analytics
   DateTime? _startTime;
@@ -69,7 +70,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
     _questions = _generator.generateQuestions(
       levelNumber: widget.levelNumber,
       worksheetId: _worksheetId,
-      count: totalQuestions, // 100 questions per worksheet
+      count: kDebugMode ? 20 : totalQuestions, // dev: 20 | prod: 100
     );
     
     _startTime = DateTime.now();

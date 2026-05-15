@@ -607,7 +607,7 @@ class CyberProgress extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          if (child != null) child!,
+          ?child,
         ],
       ),
     );

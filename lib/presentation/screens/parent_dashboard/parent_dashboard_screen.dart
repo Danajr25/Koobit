@@ -466,7 +466,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
-            value: child.currentLevel / 56, // Total levels
+            value: child.currentLevel / 62, // Total levels
             backgroundColor: AppColors.border,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             borderRadius: BorderRadius.circular(10),
@@ -474,7 +474,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${child.currentLevel}/56 levels completed',
+            '${child.currentLevel}/62 levels completed',
             style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
@@ -505,7 +505,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               controller: levelController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Level Number (1-56)',
+                labelText: 'Level Number (1-62)',
                 border: const OutlineInputBorder(),
                 hintText: 'e.g., ${child.currentLevel + 1}',
               ),
@@ -531,19 +531,60 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ElevatedButton(
             onPressed: () {
               final level = int.tryParse(levelController.text);
-              if (level != null && level >= 1 && level <= 56) {
-                // TODO: Implement actual level unlock
-                Navigator.pop(ctx);
+              final pin = pinController.text.trim();
+
+              if (level == null || level < 1 || level > 62) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Level $level unlocked for ${child.name}')),
+                  const SnackBar(content: Text('Enter a valid level (1-56).')),
                 );
+                return;
               }
+
+              // Validate against stored PIN (changeable in Settings, default "1234").
+              SharedPreferences.getInstance().then((prefs) {
+                final storedPin = prefs.getString('parent_pin') ?? '1234';
+                if (pin.length != 4 || pin != storedPin) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Incorrect parent PIN.')),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx);
+                _unlockChildLevel(child, level);
+              });
             },
             child: const Text('Unlock'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _unlockChildLevel(ChildModel child, int level) async {
+    try {
+      final updated = await _childRepo.updateLevel(child.id, level);
+
+      if (!mounted) return;
+
+      setState(() {
+        final index = _children.indexWhere((c) => c.id == child.id);
+        if (index != -1) {
+          _children[index] = updated;
+          if (_selectedChildIndex >= _children.length) {
+            _selectedChildIndex = 0;
+          }
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unlocked Level $level for ${updated.name}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to unlock level: $e')),
+      );
+    }
   }
 
   Widget _buildRecentActivity(AppLocalizations l10n) {

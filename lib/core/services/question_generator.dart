@@ -72,6 +72,8 @@ class QuestionGenerator {
         return _generateFactorizationQuestion(config, worksheetId, questionNumber, pageNumber);
       case LevelType.quadratic:
         return _generateQuadraticQuestion(config, worksheetId, questionNumber, pageNumber);
+      case LevelType.pythagorean:
+        return _generatePythagoreanQuestion(config, worksheetId, questionNumber, pageNumber);
     }
   }
 
@@ -834,5 +836,111 @@ class QuestionGenerator {
       questionText: 'Solve: x² - ${p + q}x + ${p * q} = 0',
       correctAnswer: 'x = $p or x = $q',
     );
+  }
+
+  // ===== PYTHAGOREAN QUESTIONS (Levels 57-62) =====
+  QuestionModel _generatePythagoreanQuestion(
+    LevelConfig config,
+    String worksheetId,
+    int questionNumber,
+    int pageNumber,
+  ) {
+    // Pythagorean triples pool
+    const triples = [
+      [3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25],
+      [6, 8, 10], [9, 12, 15], [12, 16, 20], [15, 20, 25],
+    ];
+
+    switch (config.level) {
+      case 57: // Find hypotenuse from perfect triple
+        final t = triples[_random.nextInt(triples.length)];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: 'a=${t[0]}, b=${t[1]}. Find c (a² + b² = c²):',
+          correctAnswer: t[2].toString(),
+        );
+      case 58: // Find hypotenuse — perfect squares
+        final t = triples[_random.nextInt(triples.length)];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: '${t[0]}² + ${t[1]}² = c². Find c:',
+          correctAnswer: t[2].toString(),
+        );
+      case 59: // Non-perfect: find missing leg
+        final t = triples[_random.nextInt(triples.length)];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: 'a=${t[0]}, c=${t[2]}. Find b (c² - a² = b²):',
+          correctAnswer: t[1].toString(),
+        );
+      case 60: // Word problems
+        final t = triples[_random.nextInt(triples.length)];
+        final problems = [
+          'A ladder ${t[2]}m long leans against a wall. Its foot is ${t[0]}m from the wall. How high does it reach?',
+          'A ${t[2]}m rope goes from the top of a pole to a point ${t[0]}m from the base. Find the pole height.',
+        ];
+        final q = problems[_random.nextInt(problems.length)];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: q,
+          correctAnswer: t[1].toString(),
+        );
+      case 61: // Algebraic: find x given expressions for sides
+        final k = _random.nextInt(4) + 1;
+        final a = 3 * k;
+        final b = 4 * k;
+        final c = 5 * k;
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: 'Sides are (${3}x), (${4}x), $c. Find x:',
+          correctAnswer: k.toString(),
+        );
+      case 62: // Distance formula
+        final x1 = _random.nextInt(5);
+        final y1 = _random.nextInt(5);
+        final t = triples[_random.nextInt(4)]; // use small triples
+        final x2 = x1 + t[0];
+        final y2 = y1 + t[1];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: 'Distance from ($x1,$y1) to ($x2,$y2):',
+          correctAnswer: t[2].toString(),
+        );
+      default:
+        final t = triples[_random.nextInt(triples.length)];
+        return QuestionModel(
+          id: _uuid.v4(),
+          worksheetId: worksheetId,
+          questionNumber: questionNumber,
+          pageNumber: pageNumber,
+          type: QuestionType.geometry,
+          questionText: 'a=${t[0]}, b=${t[1]}. Find c:',
+          correctAnswer: t[2].toString(),
+        );
+    }
   }
 }
