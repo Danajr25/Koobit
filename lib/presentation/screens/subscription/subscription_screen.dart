@@ -446,7 +446,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Widget _buildSubscribeButton() {
     return CyberButton(
-      label: _isProcessing ? 'Creating bill…' : 'Subscribe — $_planLabel',
+      text: _isProcessing ? 'Creating bill…' : 'Subscribe — $_planLabel',
       icon: Icons.credit_card_rounded,
       onPressed: _isProcessing ? null : _subscribe,
       color: AppColors.primary,
@@ -719,40 +719,4 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-/// Simple cyber-style primary button.
-class CyberButton extends StatelessWidget {
-  final String label;
-  final IconData? icon;
-  final VoidCallback? onPressed;
-  final Color color;
-
-  const CyberButton({
-    super.key,
-    required this.label,
-    this.icon,
-    required this.onPressed,
-    this.color = AppColors.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: icon != null ? Icon(icon, size: 20) : const SizedBox.shrink(),
-        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: color.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 4,
-          shadowColor: color.withOpacity(0.4),
-        ),
-      ),
-    );
-  }
-}
+// CyberButton is provided by ../../widgets/cyber_widgets.dart
