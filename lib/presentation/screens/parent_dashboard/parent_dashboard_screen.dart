@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/l10n/app_localizations.dart';
@@ -147,7 +148,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           Icon(
             Icons.child_care_rounded,
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -198,8 +199,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: isSelected
-                        ? Colors.white.withOpacity(0.2)
-                        : AppColors.primary.withOpacity(0.1),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : AppColors.primary.withValues(alpha: 0.1),
                     child: Text(
                       child.name.isNotEmpty ? child.name[0].toUpperCase() : '?',
                       style: TextStyle(
@@ -235,14 +236,14 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -252,7 +253,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         children: [
           CircleAvatar(
             radius: 35,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             child: Text(
               child.name.isNotEmpty ? child.name[0].toUpperCase() : '?',
               style: const TextStyle(
@@ -280,7 +281,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   '${l10n.level} ${child.currentLevel}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -309,7 +310,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -382,7 +383,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -423,7 +424,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -529,7 +530,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final level = int.tryParse(levelController.text);
               final pin = pinController.text.trim();
 
@@ -541,17 +542,19 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               }
 
               // Validate against stored PIN (changeable in Settings, default "1234").
-              SharedPreferences.getInstance().then((prefs) {
-                final storedPin = prefs.getString('parent_pin') ?? '1234';
-                if (pin.length != 4 || pin != storedPin) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Incorrect parent PIN.')),
-                  );
-                  return;
-                }
-                Navigator.pop(ctx);
-                _unlockChildLevel(child, level);
-              });
+              final messenger = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(ctx);
+              final prefs = await SharedPreferences.getInstance();
+              final storedPin = prefs.getString('parent_pin') ?? '1234';
+              if (pin.length != 4 || pin != storedPin) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Incorrect parent PIN.')),
+                );
+                return;
+              }
+              if (!mounted) return;
+              nav.pop();
+              _unlockChildLevel(child, level);
             },
             child: const Text('Unlock'),
           ),
@@ -639,8 +642,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: ws.passed
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.error.withOpacity(0.1),
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -713,7 +716,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -744,7 +747,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                 bgColor = ws.passed ? AppColors.success : AppColors.warning;
                 icon = Icons.check_rounded;
               } else if (isPast) {
-                bgColor = AppColors.error.withOpacity(0.7);
+                bgColor = AppColors.error.withValues(alpha: 0.7);
                 icon = Icons.close_rounded;
               } else if (isToday) {
                 bgColor = AppColors.primary;

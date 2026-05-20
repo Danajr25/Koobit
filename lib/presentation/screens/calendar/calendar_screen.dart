@@ -160,7 +160,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.5),
+                color: color.withValues(alpha: 0.5),
                 blurRadius: 6,
                 spreadRadius: 1,
               ),
@@ -314,7 +314,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (worksheet != null) {
       switch (worksheet.status) {
         case WorksheetStatus.completed:
-          bgColor = worksheet.passed ? AppColors.success : AppColors.success.withOpacity(0.6);
+          bgColor = worksheet.passed ? AppColors.success : AppColors.success.withValues(alpha: 0.6);
           textColor = Colors.white;
           break;
         case WorksheetStatus.inProgress:
@@ -325,7 +325,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           break;
         case WorksheetStatus.notStarted:
           if (!isFuture) {
-            bgColor = AppColors.error.withOpacity(0.7);
+            bgColor = AppColors.error.withValues(alpha: 0.7);
             textColor = Colors.white;
           }
           break;
@@ -353,7 +353,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-              color: isFuture ? AppColors.textSecondary.withOpacity(0.5) : textColor,
+              color: isFuture ? AppColors.textSecondary.withValues(alpha: 0.5) : textColor,
             ),
           ),
         ),
@@ -474,7 +474,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

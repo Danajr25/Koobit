@@ -259,7 +259,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -270,7 +270,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -334,7 +334,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -435,7 +435,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     ),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                     ),
                   ),
                   // Pass line at 95%
@@ -445,7 +445,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       FlSpot(filtered.length - 1.0, 95),
                     ],
                     isCurved: false,
-                    color: AppColors.success.withOpacity(0.5),
+                    color: AppColors.success.withValues(alpha: 0.5),
                     barWidth: 2,
                     dotData: const FlDotData(show: false),
                     dashArray: [5, 5],
@@ -461,7 +461,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               Container(
                 width: 12,
                 height: 2,
-                color: AppColors.success.withOpacity(0.5),
+                color: AppColors.success.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 6),
               Text(
@@ -516,8 +516,8 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: ws.passed
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.error.withOpacity(0.1),
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(

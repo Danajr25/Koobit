@@ -198,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -263,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -305,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -352,7 +352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ElevatedButton.icon(
         onPressed: _showLogoutConfirmation,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error.withOpacity(0.1),
+          backgroundColor: AppColors.error.withValues(alpha: 0.1),
           foregroundColor: AppColors.error,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -548,30 +548,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               final currentPin = currentController.text.trim();
               final newPin = newController.text.trim();
+              final messenger = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(ctx);
 
               final prefs = await SharedPreferences.getInstance();
               final storedPin = prefs.getString('parent_pin') ?? '1234';
 
               if (currentPin != storedPin) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(content: Text('Current PIN is incorrect.')),
                 );
                 return;
               }
               if (newPin.length != 4) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(content: Text('New PIN must be exactly 4 digits.')),
                 );
                 return;
               }
 
               await prefs.setString('parent_pin', newPin);
-              if (mounted) {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Parent PIN updated successfully.')),
-                );
-              }
+              if (!mounted) return;
+              nav.pop();
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Parent PIN updated successfully.')),
+              );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: Text(l10n.save),

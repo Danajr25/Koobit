@@ -10,8 +10,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/game_routes.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/child_model.dart';
-import '../../../data/repositories/child_repository.dart';
 import '../../widgets/cyber_widgets.dart';
+import '../../../app/app_router.dart';
 
 const List<String> _sharedItemKeys = [
   'building_blocks',
@@ -234,6 +234,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                         padding: const EdgeInsets.only(bottom: 16),
                         child: _buildGameCard(game),
                       )),
+                  const SizedBox(height: 8),
+                  _buildArcadeSection(),
                 ],
               ),
             ),
@@ -255,7 +257,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
               shape: BoxShape.circle,
               gradient: AppColors.neonGradient,
               boxShadow: [
-                BoxShadow(color: AppColors.primary.withOpacity(0.45), blurRadius: 16),
+                BoxShadow(color: AppColors.primary.withValues(alpha: 0.45), blurRadius: 16),
               ],
             ),
             child: const Icon(Icons.sports_esports_rounded, color: AppColors.textOnPrimary, size: 28),
@@ -356,6 +358,58 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     );
   }
 
+  Widget _buildArcadeSection() {
+    return GlowCard(
+      glowColor: const Color(0xFF00D4FF),
+      glowIntensity: 0.18,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push(AppRoutes.arcade, extra: _child),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00D4FF), Color(0xFF0088CC)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.videogame_asset_rounded,
+                  color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Arcade Games',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Flappy Math, Balloon Pop, Math Runner',
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Color(0xFF00D4FF), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGameCard(_GameDefinition game) {
     final unlocked = _unlockedLevels[game.key] ?? 1;
     final maxUnlocked = _maxUnlockedForGame();
@@ -374,7 +428,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [game.accent.withOpacity(0.9), game.accent.withOpacity(0.35)],
+                    colors: [game.accent.withValues(alpha: 0.9), game.accent.withValues(alpha: 0.35)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -410,9 +464,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: game.accent.withOpacity(0.14),
+                    color: game.accent.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: game.accent.withOpacity(0.35)),
+                    border: Border.all(color: game.accent.withValues(alpha: 0.35)),
                   ),
                   child: Text(
                     'Lv $unlocked/$maxUnlocked',
@@ -445,12 +499,12 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isUnlocked ? game.accent.withOpacity(isCurrent ? 0.95 : 0.2) : AppColors.surfaceDark,
+                  color: isUnlocked ? game.accent.withValues(alpha: isCurrent ? 0.95 : 0.2) : AppColors.surfaceDark,
                   border: Border.all(
                     color: isUnlocked ? game.accent : AppColors.border,
                   ),
                   boxShadow: isCurrent
-                      ? [BoxShadow(color: game.accent.withOpacity(0.6), blurRadius: 10)]
+                      ? [BoxShadow(color: game.accent.withValues(alpha: 0.6), blurRadius: 10)]
                       : null,
                 ),
                 child: Text(
@@ -876,7 +930,7 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _game.accent.withOpacity(0.2),
+                              color: _game.accent.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Icon(_game.icon, color: _game.accent, size: 28),
@@ -933,9 +987,9 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.12),
+                            color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             'Hint: ${currentQuestion.answer}',
@@ -956,14 +1010,14 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                             onTap: () => _selectAnswer(choice),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: isHighlighted ? AppColors.success.withOpacity(0.2) : AppColors.surfaceDark,
+                                color: isHighlighted ? AppColors.success.withValues(alpha: 0.2) : AppColors.surfaceDark,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isHighlighted ? AppColors.success : AppColors.border,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isHighlighted ? AppColors.success : _game.accent).withOpacity(0.12),
+                                    color: (isHighlighted ? AppColors.success : _game.accent).withValues(alpha: 0.12),
                                     blurRadius: 12,
                                   ),
                                 ],
@@ -1061,7 +1115,7 @@ class _GameDefinition {
   final String description;
   final IconData icon;
   final Color accent;
-  final int tokenCost;
+  final int tokenCost = 1;
   final List<_RewardBand> rewardPattern;
 
   const _GameDefinition({
@@ -1112,7 +1166,7 @@ class _TokenChip extends StatelessWidget {
         gradient: AppColors.neonGradient,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppColors.primary.withOpacity(0.45), blurRadius: 10),
+          BoxShadow(color: AppColors.primary.withValues(alpha: 0.45), blurRadius: 10),
         ],
       ),
       child: Row(

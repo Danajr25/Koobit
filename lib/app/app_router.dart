@@ -20,6 +20,10 @@ import '../presentation/screens/performance/performance_screen.dart';
 import '../presentation/screens/settings/settings_screen.dart';
 import '../presentation/screens/subscription/subscription_screen.dart';
 import '../presentation/screens/parent_dashboard/parent_dashboard_screen.dart';
+import '../presentation/screens/arcade/arcade_hub_screen.dart';
+import '../presentation/screens/arcade/flappy_math_screen.dart';
+import '../presentation/screens/arcade/balloon_pop_screen.dart';
+import '../presentation/screens/arcade/math_runner_screen.dart';
 import '../data/models/question_model.dart';
 import '../core/constants/game_routes.dart';
 
@@ -43,6 +47,10 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String subscription = '/subscription';
   static const String parentDashboard = '/parent-dashboard';
+  static const String arcade = '/arcade';
+  static const String arcadeFlappy = '/arcade/flappy';
+  static const String arcadeBalloon = '/arcade/balloon';
+  static const String arcadeRunner = '/arcade/runner';
 }
 
 /// App router configuration
@@ -274,6 +282,46 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.parentDashboard,
           builder: (context, state) => const ParentDashboardScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.arcade,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return ArcadeHubScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeFlappy,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return FlappyMathScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeBalloon,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return BalloonPopScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeRunner,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return MathRunnerScreen(child: child);
+          },
         ),
       ],
     );

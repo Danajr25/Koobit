@@ -30,13 +30,13 @@ class CyberFrame extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: borderColor.withOpacity(0.5),
+          color: borderColor.withValues(alpha: 0.5),
           width: borderWidth,
         ),
         boxShadow: showGlow
             ? [
                 BoxShadow(
-                  color: (glowColor ?? borderColor).withOpacity(0.3),
+                  color: (glowColor ?? borderColor).withValues(alpha: 0.3),
                   blurRadius: 12,
                   spreadRadius: 1,
                 ),
@@ -155,12 +155,12 @@ class GlowCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: glowColor.withOpacity(0.3),
+          color: glowColor.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withOpacity(glowIntensity),
+            color: glowColor.withValues(alpha: glowIntensity),
             blurRadius: 15,
             spreadRadius: -2,
           ),
@@ -213,7 +213,7 @@ class CyberButton extends StatelessWidget {
         boxShadow: onPressed != null
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 12,
                   spreadRadius: -2,
                   offset: const Offset(0, 4),
@@ -414,7 +414,7 @@ class _PulsingGlowState extends State<PulsingGlow>
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: widget.glowColor.withOpacity(_animation.value),
+                color: widget.glowColor.withValues(alpha: _animation.value),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
@@ -477,14 +477,14 @@ class _ScanningLineState extends State<ScanningLine>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  widget.color.withOpacity(0),
-                  widget.color.withOpacity(0.8),
-                  widget.color.withOpacity(0),
+                  widget.color.withValues(alpha: 0),
+                  widget.color.withValues(alpha: 0.8),
+                  widget.color.withValues(alpha: 0),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withOpacity(0.5),
+                  color: widget.color.withValues(alpha: 0.5),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -534,7 +534,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = gridColor.withOpacity(0.1)
+      ..color = gridColor.withValues(alpha: 0.1)
       ..strokeWidth = 0.5;
 
     // Vertical lines
@@ -588,7 +588,7 @@ class CyberProgress extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 15,
             spreadRadius: 2,
           ),
@@ -641,7 +641,7 @@ class CyberStatCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(

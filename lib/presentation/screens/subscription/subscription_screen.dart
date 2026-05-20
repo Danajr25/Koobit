@@ -31,7 +31,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   // Tracks a pending bill so the user can verify payment after returning
   String? _pendingBillId;
-  String? _pendingBillUrl;
 
   // Which plan the user tapped – 'monthly' or 'yearly'
   String _selectedPlan = 'monthly';
@@ -52,10 +51,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     try {
       final user = await _authRepo.getUserProfile(authState.user!.id);
-      if (mounted) setState(() {
-        _user = user;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _isLoading = false;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -115,7 +116,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     try {
       final bill = await _billplz.createBill(
-        email: authState.user!.email ?? 'user@koobit.com',
+          email: authState.user!.email,
         name: 'Koobit Parent',
         amountCents: _amountCents,
         description: _planLabel,
@@ -123,7 +124,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
       setState(() {
         _pendingBillId = bill.id;
-        _pendingBillUrl = bill.url;
         _isProcessing = false;
       });
 
@@ -150,6 +150,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Future<void> _verifyPayment() async {
     if (_pendingBillId == null) return;
 
+    final authBloc = context.read<AuthBloc>();
+
     setState(() {
       _isProcessing = true;
       _errorMessage = null;
@@ -160,7 +162,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
       if (bill.paid) {
         // Update Supabase with active subscription
-        final authState = context.read<AuthBloc>().state;
+        final authState = authBloc.state;
         if (authState.user != null) {
           final endDate = _selectedPlan == 'yearly'
               ? DateTime.now().add(const Duration(days: 365))
@@ -175,7 +177,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
         setState(() {
           _pendingBillId = null;
-          _pendingBillUrl = null;
           _isProcessing = false;
         });
 
@@ -306,10 +307,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.4)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.15),
+            color: statusColor.withValues(alpha: 0.15),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -321,7 +322,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
+              color: statusColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -476,7 +477,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.success.withOpacity(0.3)),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,9 +517,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,9 +551,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         padding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.warning.withOpacity(0.15),
+          color: AppColors.warning.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.warning.withOpacity(0.4)),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -635,7 +636,7 @@ class _PlanCard extends StatelessWidget {
     final borderColor =
         selected ? AppColors.primary : AppColors.border;
     final bgColor = selected
-        ? AppColors.primary.withOpacity(0.08)
+        ? AppColors.primary.withValues(alpha: 0.08)
         : AppColors.surface;
 
     return GestureDetector(
@@ -650,7 +651,7 @@ class _PlanCard extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 12,
                     spreadRadius: 1,
                   )
@@ -666,10 +667,10 @@ class _PlanCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.15),
+                  color: AppColors.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border:
-                      Border.all(color: AppColors.success.withOpacity(0.4)),
+                      Border.all(color: AppColors.success.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   badge!,

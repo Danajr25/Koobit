@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
               gradient: AppColors.neonGradient,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.5),
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   blurRadius: 12,
                   spreadRadius: 1,
                 ),
@@ -120,10 +120,10 @@ class HomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
@@ -204,7 +204,7 @@ class HomeScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -249,18 +249,18 @@ class HomeScreen extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: didToday
-                ? [AppColors.success.withOpacity(0.8), AppColors.successDark]
-                : [AppColors.primary.withOpacity(0.8), AppColors.primaryDark],
+                ? [AppColors.success.withValues(alpha: 0.8), AppColors.successDark]
+                : [AppColors.primary.withValues(alpha: 0.8), AppColors.primaryDark],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (didToday ? AppColors.success : AppColors.primary).withOpacity(0.5),
+            color: (didToday ? AppColors.success : AppColors.primary).withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
               color: (didToday ? AppColors.success : AppColors.primary)
-                  .withOpacity(0.4),
+                  .withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -274,10 +274,10 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Icon(
@@ -291,10 +291,10 @@ class HomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
@@ -304,7 +304,7 @@ class HomeScreen extends StatelessWidget {
                         Text(
                           '~10 min',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -330,7 +330,7 @@ class HomeScreen extends StatelessWidget {
                   ? l10n.comeBackTomorrow
                   : l10n.worksheetDescription,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 14,
               ),
             ),
@@ -342,7 +342,7 @@ class HomeScreen extends StatelessWidget {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
@@ -422,10 +422,10 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: item.color.withOpacity(0.15),
+                    color: item.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: item.color.withOpacity(0.3),
+                      color: item.color.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Icon(item.icon, color: item.color),
@@ -439,7 +439,7 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: item.color.withOpacity(0.5),
+                          color: item.color.withValues(alpha: 0.5),
                           blurRadius: 8,
                         ),
                       ],

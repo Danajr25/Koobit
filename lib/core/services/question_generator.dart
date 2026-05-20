@@ -903,8 +903,6 @@ class QuestionGenerator {
         );
       case 61: // Algebraic: find x given expressions for sides
         final k = _random.nextInt(4) + 1;
-        final a = 3 * k;
-        final b = 4 * k;
         final c = 5 * k;
         return QuestionModel(
           id: _uuid.v4(),
