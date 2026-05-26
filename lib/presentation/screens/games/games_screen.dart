@@ -879,6 +879,46 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
     );
   }
 
+  Widget _powerupBtn({
+    required IconData icon,
+    required String label,
+    required int count,
+    required Color color,
+    required VoidCallback? onTap,
+  }) {
+    final active = count > 0 && onTap != null;
+    return Expanded(
+      child: GestureDetector(
+        onTap: active ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: active ? color.withValues(alpha: 0.15) : AppColors.surfaceDark,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: active ? color : AppColors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: active ? color : AppColors.textSecondary, size: 20),
+              const SizedBox(height: 2),
+              Text(
+                '$label ($count)',
+                style: TextStyle(
+                  color: active ? color : AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentQuestion = _questions[_questionIndex];
@@ -950,7 +990,22 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: _GameScene(
+                      gameKey: _game.key,
+                      accent: _game.accent,
+                      correctCount: _correctCount,
+                      totalQuestions: _questions.length,
+                      level: _currentLevel,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 GlowCard(
                   glowColor: AppColors.primary,
                   glowIntensity: 0.1,
@@ -1021,31 +1076,28 @@ class _GamePlayScreenState extends State<GamePlayScreen> {
                       const SizedBox(height: 14),
                       Row(
                         children: [
-                          Expanded(
-                            child: CyberButton(
-                                text: 'Hint ($_hintCount)',
-                              onPressed: _useHint,
-                              color: AppColors.accent,
-                                height: 44,
-                            ),
+                          _powerupBtn(
+                            icon: Icons.lightbulb_outline_rounded,
+                            label: 'Hint',
+                            count: _hintCount,
+                            color: AppColors.accent,
+                            onTap: _useHint,
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: CyberButton(
-                                text: 'Shield ($_shieldCount)',
-                              onPressed: null,
-                              color: AppColors.success,
-                                height: 44,
-                            ),
+                          const SizedBox(width: 8),
+                          _powerupBtn(
+                            icon: Icons.shield_outlined,
+                            label: 'Shield',
+                            count: _shieldCount,
+                            color: AppColors.success,
+                            onTap: null,
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: CyberButton(
-                                text: '2x ($_doublePointsCount)',
-                              onPressed: _useDoublePoints,
-                              color: AppColors.secondary,
-                                height: 44,
-                            ),
+                          const SizedBox(width: 8),
+                          _powerupBtn(
+                            icon: Icons.close_fullscreen_rounded,
+                            label: '2x',
+                            count: _doublePointsCount,
+                            color: AppColors.secondary,
+                            onTap: _useDoublePoints,
                           ),
                         ],
                       ),
@@ -1212,4 +1264,535 @@ class _RuleLine extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Animated game scene visuals (CustomPainter-based)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GameScene extends StatefulWidget {
+  final String gameKey;
+  final Color accent;
+  final int correctCount;
+  final int totalQuestions;
+  final int level;
+
+  const _GameScene({
+    required this.gameKey,
+    required this.accent,
+    required this.correctCount,
+    required this.totalQuestions,
+    required this.level,
+  });
+
+  @override
+  State<_GameScene> createState() => _GameSceneState();
+}
+
+class _GameSceneState extends State<_GameScene>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 4))
+          ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, child) {
+        final CustomPainter painter;
+        switch (widget.gameKey) {
+          case 'number_pet_adventure':
+            painter = _PetPainter(
+              t: _ctrl.value,
+              correctCount: widget.correctCount,
+              accent: widget.accent,
+              level: widget.level,
+            );
+          case 'space_math_explorer':
+            painter = _SpacePainter(
+              t: _ctrl.value,
+              correctCount: widget.correctCount,
+              total: widget.totalQuestions,
+              accent: widget.accent,
+            );
+          default:
+            painter = _CityPainter(
+              t: _ctrl.value,
+              correctCount: widget.correctCount,
+              accent: widget.accent,
+            );
+        }
+        return CustomPaint(painter: painter, size: Size.infinite);
+      },
+    );
+  }
+}
+
+// ── Math Builder – City skyline ───────────────────────────────────────────────
+class _CityPainter extends CustomPainter {
+  final double t;
+  final int correctCount;
+  final Color accent;
+
+  const _CityPainter(
+      {required this.t, required this.correctCount, required this.accent});
+
+  static const List<List<double>> _buildings = [
+    [0.02, 0.13, 0.55],
+    [0.17, 0.11, 0.72],
+    [0.30, 0.15, 0.45],
+    [0.47, 0.12, 0.67],
+    [0.61, 0.10, 0.56],
+    [0.73, 0.13, 0.42],
+    [0.88, 0.11, 0.62],
+  ];
+
+  static const List<List<double>> _starCoords = [
+    [0.08, 0.08], [0.22, 0.12], [0.40, 0.06], [0.55, 0.14],
+    [0.68, 0.07], [0.80, 0.10], [0.92, 0.05], [0.15, 0.22],
+    [0.35, 0.18], [0.60, 0.20], [0.78, 0.17], [0.95, 0.22],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Sky gradient
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF070B20), Color(0xFF1A1040)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // Stars
+    for (int i = 0; i < _starCoords.length; i++) {
+      final alpha =
+          (0.4 + 0.6 * ((sin(t * 2 * pi + i * 0.9) + 1) / 2)).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        Offset(w * _starCoords[i][0], h * _starCoords[i][1]),
+        i % 4 == 0 ? 2.0 : 1.2,
+        Paint()..color = Colors.white.withValues(alpha: alpha),
+      );
+    }
+
+    // Moon
+    canvas.drawCircle(Offset(w * 0.87, h * 0.15), 16,
+        Paint()..color = const Color(0xFFECE9C8));
+    canvas.drawCircle(Offset(w * 0.90, h * 0.13), 13,
+        Paint()..color = const Color(0xFF0E1230));
+
+    // Ground
+    canvas.drawRect(Rect.fromLTWH(0, h * 0.76, w, h * 0.24),
+        Paint()..color = const Color(0xFF111128));
+
+    // Buildings
+    for (int i = 0; i < _buildings.length; i++) {
+      final def = _buildings[i];
+      final bx = w * def[0];
+      final bw = w * def[1];
+      final bh = h * def[2];
+      final by = h * 0.76 - bh;
+      final isLit = i < correctCount;
+
+      canvas.drawRect(
+        Rect.fromLTWH(bx, by, bw, bh),
+        Paint()
+          ..color = isLit
+              ? Color.lerp(const Color(0xFF1E2045), accent, 0.25)!
+              : const Color(0xFF161630),
+      );
+      if (isLit) {
+        canvas.drawRect(
+          Rect.fromLTWH(bx, by, bw, bh),
+          Paint()
+            ..color = accent.withValues(alpha: 0.45)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5,
+        );
+      }
+
+      // Windows
+      const ws = 3.5;
+      const wp = 4.0;
+      final cols = max(1, (bw / (ws + wp)).floor());
+      final rows = (bh / (ws + wp)).floor().clamp(1, 10);
+      for (int r = 1; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+          final wx =
+              bx + (bw - cols * (ws + wp) + wp) / 2 + c * (ws + wp);
+          final wy = by + wp + r * (ws + wp);
+          final lit = isLit && (r + c + i) % 3 != 0;
+          final winAlpha = lit
+              ? (0.5 +
+                      0.5 *
+                          ((sin(t * 2 * pi + i * 0.6 + r * 0.3) + 1) / 2))
+                  .clamp(0.0, 1.0)
+              : 0.0;
+          canvas.drawRect(
+            Rect.fromLTWH(wx, wy, ws, ws),
+            Paint()
+              ..color = lit
+                  ? accent.withValues(alpha: winAlpha)
+                  : const Color(0xFF0D0E20),
+          );
+        }
+      }
+    }
+
+    // Score label
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '$correctCount correct',
+        style: TextStyle(
+            color: accent, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(8, h - 18));
+  }
+
+  @override
+  bool shouldRepaint(_CityPainter old) =>
+      old.t != t || old.correctCount != correctCount;
+}
+
+// ── Number Pet Adventure – Pet character ────────────────────────────────────
+class _PetPainter extends CustomPainter {
+  final double t;
+  final int correctCount;
+  final Color accent;
+  final int level;
+
+  const _PetPainter({
+    required this.t,
+    required this.correctCount,
+    required this.accent,
+    required this.level,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Background
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0D1A2A), Color(0xFF0A1F0A)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // Ground
+    canvas.drawRect(Rect.fromLTWH(0, h * 0.76, w, h * 0.24),
+        Paint()..color = const Color(0xFF0F2F0F));
+
+    // Grass tufts
+    for (double gx = 5; gx < w; gx += 28) {
+      canvas.drawRect(Rect.fromLTWH(gx, h * 0.74, 5, 7),
+          Paint()..color = const Color(0xFF1E5C1E));
+      canvas.drawRect(Rect.fromLTWH(gx + 9, h * 0.75, 3, 5),
+          Paint()..color = const Color(0xFF1E5C1E));
+    }
+
+    // Fireflies
+    for (int i = 0; i < 6; i++) {
+      final fx = w * (0.05 + i * 0.18);
+      final fy = h * (0.15 + 0.1 * sin(t * 2 * pi + i * 1.1));
+      final fa =
+          (0.3 + 0.7 * ((sin(t * 3 * pi + i * 1.7) + 1) / 2)).clamp(0.0, 1.0);
+      canvas.drawCircle(
+          Offset(fx, fy), 2.5, Paint()..color = Colors.yellow.withValues(alpha: fa));
+    }
+
+    // Pet
+    final petR = 44.0 * (0.65 + correctCount * 0.07).clamp(0.65, 1.0);
+    final bob = 5.0 * sin(t * 2 * pi);
+    final pc = Offset(w * 0.5, h * 0.50 + bob);
+
+    // Shadow
+    canvas.drawOval(
+      Rect.fromCenter(
+          center: Offset(pc.dx, h * 0.75),
+          width: petR * 1.3,
+          height: petR * 0.25),
+      Paint()..color = Colors.black38,
+    );
+
+    // Ears (behind body)
+    for (final side in [-1.0, 1.0]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(pc.dx + side * petR * 0.55, pc.dy - petR * 0.45)
+          ..lineTo(pc.dx + side * petR * 0.28, pc.dy - petR * 0.95)
+          ..lineTo(pc.dx + side * petR * 0.08, pc.dy - petR * 0.58)
+          ..close(),
+        Paint()..color = accent,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(pc.dx + side * petR * 0.48, pc.dy - petR * 0.50)
+          ..lineTo(pc.dx + side * petR * 0.28, pc.dy - petR * 0.82)
+          ..lineTo(pc.dx + side * petR * 0.12, pc.dy - petR * 0.60)
+          ..close(),
+        Paint()..color = const Color(0xFFF48FB1),
+      );
+    }
+
+    // Body
+    canvas.drawCircle(pc, petR, Paint()..color = accent);
+    canvas.drawCircle(
+        pc - Offset(petR * 0.22, petR * 0.22),
+        petR * 0.38,
+        Paint()..color = Colors.white.withValues(alpha: 0.12));
+
+    // Eyes
+    final eyeY = pc.dy - petR * 0.12;
+    for (final ex in [-petR * 0.28, petR * 0.28]) {
+      canvas.drawCircle(
+          Offset(pc.dx + ex, eyeY), petR * 0.22, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(pc.dx + ex + 1.5, eyeY + 1.5), petR * 0.12,
+          Paint()..color = Colors.black);
+      canvas.drawCircle(Offset(pc.dx + ex - 2.5, eyeY - 2.5), petR * 0.04,
+          Paint()..color = Colors.white);
+    }
+
+    // Mouth
+    final my = pc.dy + petR * 0.28;
+    final mouthPaint = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+    if (correctCount > 0) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(pc.dx - petR * 0.2, my)
+          ..quadraticBezierTo(
+              pc.dx, my + petR * 0.14, pc.dx + petR * 0.2, my),
+        mouthPaint,
+      );
+    } else {
+      canvas.drawLine(Offset(pc.dx - petR * 0.15, my),
+          Offset(pc.dx + petR * 0.15, my), mouthPaint);
+    }
+
+    // Hearts when doing well
+    if (correctCount >= 2) {
+      for (int i = 0; i < 3; i++) {
+        final hx = pc.dx + (i - 1) * petR * 0.9;
+        final hy = pc.dy - petR * 1.3 - 8 * sin(t * 2 * pi + i * 1.4);
+        final ha = (0.5 + 0.5 * sin(t * 2 * pi + i)).clamp(0.0, 1.0);
+        canvas.drawCircle(Offset(hx, hy), 4,
+            Paint()..color = Colors.pinkAccent.withValues(alpha: ha));
+        canvas.drawCircle(Offset(hx + 5, hy), 4,
+            Paint()..color = Colors.pinkAccent.withValues(alpha: ha));
+      }
+    }
+
+    // Level badge
+    final tp = TextPainter(
+      text: TextSpan(
+        text: 'Lv.$level',
+        style:
+            TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(w - tp.width - 8, h - 18));
+  }
+
+  @override
+  bool shouldRepaint(_PetPainter old) =>
+      old.t != t || old.correctCount != correctCount;
+}
+
+// ── Space Math Explorer – Space scene ────────────────────────────────────────
+class _SpacePainter extends CustomPainter {
+  final double t;
+  final int correctCount;
+  final int total;
+  final Color accent;
+
+  const _SpacePainter({
+    required this.t,
+    required this.correctCount,
+    required this.total,
+    required this.accent,
+  });
+
+  static const List<List<double>> _stars = [
+    [0.05, 0.10], [0.12, 0.28], [0.18, 0.08], [0.25, 0.42],
+    [0.30, 0.15], [0.38, 0.60], [0.45, 0.08], [0.52, 0.35],
+    [0.58, 0.18], [0.65, 0.72], [0.70, 0.05], [0.76, 0.48],
+    [0.82, 0.22], [0.88, 0.65], [0.94, 0.12], [0.10, 0.55],
+    [0.22, 0.72], [0.33, 0.30], [0.48, 0.80], [0.60, 0.50],
+    [0.72, 0.35], [0.85, 0.40], [0.92, 0.78], [0.04, 0.85],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Space background
+    canvas.drawRect(
+        Rect.fromLTWH(0, 0, w, h), Paint()..color = const Color(0xFF04060F));
+
+    // Stars
+    for (int i = 0; i < _stars.length; i++) {
+      final alpha =
+          (0.3 + 0.7 * ((sin(t * 2 * pi + i * 0.8) + 1) / 2)).clamp(0.0, 1.0);
+      final r = i % 5 == 0 ? 2.5 : (i % 3 == 0 ? 1.8 : 1.0);
+      canvas.drawCircle(
+        Offset(w * _stars[i][0], h * _stars[i][1]),
+        r,
+        Paint()..color = Colors.white.withValues(alpha: alpha),
+      );
+    }
+
+    // Nebula glow
+    canvas.drawCircle(Offset(w * 0.3, h * 0.4), 60,
+        Paint()..color = accent.withValues(alpha: 0.04));
+    canvas.drawCircle(Offset(w * 0.7, h * 0.6), 50,
+        Paint()..color = Colors.purple.withValues(alpha: 0.05));
+
+    // Planet (top right)
+    final pc = Offset(w * 0.80, h * 0.22);
+    canvas.drawCircle(
+      pc,
+      28,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.3, -0.3),
+          colors: const [Color(0xFFE8C46A), Color(0xFF8B6010)],
+        ).createShader(Rect.fromCircle(center: pc, radius: 28)),
+    );
+    canvas.save();
+    canvas.translate(pc.dx, pc.dy);
+    canvas.scale(1.0, 0.22);
+    canvas.drawCircle(
+        Offset.zero,
+        40,
+        Paint()
+          ..color = const Color(0xFFD4A850).withValues(alpha: 0.45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 7);
+    canvas.restore();
+    canvas.drawCircle(pc - const Offset(8, 8), 10,
+        Paint()..color = Colors.white.withValues(alpha: 0.10));
+
+    // Rocket
+    final progress = correctCount / max(1, total);
+    final rx = w * 0.08 + (w * 0.60) * progress;
+    final ry = h * 0.52 + 4 * sin(t * 2 * pi);
+
+    // Engine trail
+    for (int i = 1; i <= 8; i++) {
+      canvas.drawCircle(
+        Offset(rx - 18 - i * 7.0, ry + 8),
+        max(1.0, 7.0 - i),
+        Paint()..color = accent.withValues(alpha: max(0.0, 0.65 - i * 0.07)),
+      );
+    }
+
+    // Fins
+    canvas.drawPath(
+      Path()
+        ..moveTo(rx - 12, ry + 4)
+        ..lineTo(rx - 22, ry + 15)
+        ..lineTo(rx - 12, ry + 10)
+        ..close(),
+      Paint()..color = accent,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(rx - 12, ry - 4)
+        ..lineTo(rx - 22, ry - 15)
+        ..lineTo(rx - 12, ry - 10)
+        ..close(),
+      Paint()..color = accent,
+    );
+
+    // Body
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+          Rect.fromLTWH(rx - 12, ry - 10, 20, 20), const Radius.circular(4)),
+      Paint()..color = const Color(0xFFB0B0C0),
+    );
+
+    // Nose cone
+    for (final dy in [-1.0, 1.0]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(rx + 8, ry)
+          ..lineTo(rx + 22, ry)
+          ..lineTo(rx + 8, ry + dy * 10)
+          ..close(),
+        Paint()..color = const Color(0xFFE0E0F0),
+      );
+    }
+
+    // Window
+    canvas.drawCircle(Offset(rx - 2, ry), 5,
+        Paint()..color = const Color(0xFF1DE9B6));
+    canvas.drawCircle(
+        Offset(rx - 2, ry),
+        5,
+        Paint()
+          ..color = Colors.white24
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5);
+
+    // Exhaust flame
+    canvas.drawPath(
+      Path()
+        ..moveTo(rx - 12, ry - 6)
+        ..quadraticBezierTo(
+            rx - 30 - 5 * sin(t * 8 * pi), ry, rx - 12, ry + 6),
+      Paint()
+        ..color = accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4 + 2 * sin(t * 6 * pi).abs()
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Mission label
+    final tp = TextPainter(
+      text: TextSpan(
+        text: 'Mission: $correctCount / $total',
+        style: const TextStyle(
+            color: Color(0xFF7BFFFF),
+            fontSize: 11,
+            fontWeight: FontWeight.w600),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(8, h - 18));
+  }
+
+  @override
+  bool shouldRepaint(_SpacePainter old) =>
+      old.t != t || old.correctCount != correctCount;
 }
