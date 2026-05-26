@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -115,7 +114,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     _inventory = _decodeInventory(prefs.getString('$_inventoryPrefix${_child.id}') ?? '{}');
 
     setState(() {
-      _hasWorksheetAccess = kDebugMode || _child.currentLevel > 1 || _child.lastWorksheetDate != null;
+      _hasWorksheetAccess = true;
       _unlockedLevels = unlockedLevels;
       _highScores = highScores;
       _isLoading = false;
@@ -139,9 +138,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
   }
 
   int _maxUnlockedForGame() {
-    if (kDebugMode) return 10; // dev: all game levels accessible
-    final unlocked = _child.currentLevel + 1;
-    return unlocked.clamp(1, 10);
+    return 10; // all game levels accessible
   }
 
   Future<void> _startGame(_GameDefinition game) async {
@@ -154,26 +151,11 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     final selectedLevel = _unlockedLevels[game.key] ?? 1;
     final levelToPlay = selectedLevel.clamp(1, maxUnlocked);
 
-    final tokenCost = game.tokenCost;
-
-    // Check if child has enough tokens
-    if (_child.gameTokens < tokenCost) {
-      _showMessage('Not enough game tokens!');
-      return;
-    }
-
-    // Deduct tokens locally
-    final updatedChild = _child.copyWith(gameTokens: _child.gameTokens - tokenCost);
-
-    setState(() {
-      _child = updatedChild;
-    });
-
     // Launch game
     await context.push(
       GameRoutes.play,
       extra: {
-        'child': updatedChild,
+        'child': _child,
         'gameKey': game.key,
         'level': levelToPlay,
       },

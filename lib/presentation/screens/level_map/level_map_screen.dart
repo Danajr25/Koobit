@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -380,18 +379,7 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
   }
 
   LevelStatus _getLevelStatus(int levelNumber) {
-    if (kDebugMode) return LevelStatus.unlocked; // dev: all levels accessible
-    final currentLevel = widget.child.currentLevel;
-    
-    if (levelNumber < currentLevel) {
-      return LevelStatus.completed;
-    } else if (levelNumber == currentLevel) {
-      return LevelStatus.inProgress;
-    } else if (levelNumber == currentLevel + 1) {
-      return LevelStatus.unlocked;
-    } else {
-      return LevelStatus.locked;
-    }
+    return LevelStatus.unlocked; // all levels accessible
   }
 
   void _showLevelDetails(
