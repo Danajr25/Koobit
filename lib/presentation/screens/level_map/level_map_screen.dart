@@ -400,15 +400,13 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
         phaseColor: phaseColor,
         languageCode: languageCode,
         l10n: l10n,
-        onStart: (kDebugMode || status == LevelStatus.inProgress)
-            ? () {
+        onStart: () {
                 Navigator.pop(context);
                 context.push('/worksheet', extra: {
                   'child': widget.child,
                   'levelNumber': level.level,
                 });
-              }
-            : null,
+              },
       ),
     );
   }
