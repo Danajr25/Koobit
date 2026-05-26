@@ -60,6 +60,9 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   static const int totalPages = 10;
   static const int totalQuestions = 100; // 10 pages × 10 questions
 
+  // Actual pages based on generated question count (may be fewer in debug mode)
+  int get _actualTotalPages => (_questions.length / questionsPerPage).ceil().clamp(1, totalPages);
+
   @override
   void initState() {
     super.initState();
@@ -598,48 +601,53 @@ class _WorksheetScreenState extends State<WorksheetScreen>
               ),
             )
           else
-            // Page dots
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(totalPages, (i) {
-                final isCurrentPage = i == _currentPage;
-                final pageStart = i * questionsPerPage;
-                final pageAnswered = List.generate(questionsPerPage, (j) => pageStart + j)
-                    .where((idx) => idx < _questions.length && _answers[idx] != null)
-                    .length;
-                final pageComplete = pageAnswered == questionsPerPage;
-                
-                return GestureDetector(
-                  onTap: () => _goToPage(i),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: pageComplete
-                          ? Colors.green
-                          : (isCurrentPage ? AppColors.primary : Colors.grey[300]),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isCurrentPage || pageComplete ? Colors.white : Colors.grey[600],
+            // Page dots – wrapped in Flexible so they never overflow the Row
+            Flexible(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(_actualTotalPages, (i) {
+                    final isCurrentPage = i == _currentPage;
+                    final pageStart = i * questionsPerPage;
+                    final pageAnswered = List.generate(questionsPerPage, (j) => pageStart + j)
+                        .where((idx) => idx < _questions.length && _answers[idx] != null)
+                        .length;
+                    final pageComplete = pageAnswered == questionsPerPage;
+
+                    return GestureDetector(
+                      onTap: () => _goToPage(i),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color: pageComplete
+                              ? Colors.green
+                              : (isCurrentPage ? AppColors.primary : Colors.grey[300]),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isCurrentPage || pageComplete ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }),
+                    );
+                  }),
+                ),
+              ),
             ),
           const SizedBox(width: 12),
           // Next page button
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: _currentPage < totalPages - 1 ? () => _goToPage(_currentPage + 1) : null,
+              onPressed: _currentPage < _actualTotalPages - 1 ? () => _goToPage(_currentPage + 1) : null,
               icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('Next Page'),
               style: ElevatedButton.styleFrom(
@@ -738,7 +746,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   }
   
   void _goToPage(int page) {
-    if (page >= 0 && page < totalPages) {
+    if (page >= 0 && page < _actualTotalPages) {
       setState(() {
         _currentPage = page;
         // Set current question to first unanswered on the page, or first question
@@ -765,7 +773,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
     // For math levels, show page progress
     final progressText = _isTracingLevel
         ? 'Question ${_currentQuestion + 1} of ${_questions.length}'
-        : 'Page ${_currentPage + 1} of $totalPages';
+        : 'Page ${_currentPage + 1} of $_actualTotalPages';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
