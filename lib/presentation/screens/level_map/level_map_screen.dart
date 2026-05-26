@@ -537,7 +537,7 @@ class _LevelDetailSheet extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Action button
-          if (status == LevelStatus.inProgress && onStart != null)
+          if (status != LevelStatus.locked && onStart != null)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
