@@ -300,12 +300,28 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   // Grid layout for math levels (10 questions per page)
   Widget _buildGridLayout(QuestionModel question) {
     final pageQuestions = _currentPageQuestions;
-    
+    final instruction = _instructionForLevel();
+
     return Column(
       children: [
         // Progress indicator
         _buildProgressIndicator(),
-        
+
+        // Single instruction for the page (e.g. "Factor each expression")
+        if (instruction != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              instruction,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[300],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
         // Grid of questions (5×2)
         Expanded(
           child: Padding(
@@ -414,7 +430,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
-                    question.questionText,
+                    _displayQuestionText(question.questionText),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -476,7 +492,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              'Q${_currentQuestion + 1}: ${question.questionText}',
+              'Q${_currentQuestion + 1}: ${_displayQuestionText(question.questionText)}',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -766,6 +782,45 @@ class _WorksheetScreenState extends State<WorksheetScreen>
         _answerController.text = _answers[_currentQuestion] ?? '';
         _handwritingText = _answers[_currentQuestion] ?? '';
       });
+    }
+  }
+
+  /// Strip redundant English prefixes that are now shown once in the page
+  /// instruction header instead of on every question card.
+  String _displayQuestionText(String text) {
+    const prefixes = ['Solve: ', 'Factor: ', 'Simplify: ', 'Expand: ', 'Write: '];
+    for (final p in prefixes) {
+      if (text.startsWith(p)) return text.substring(p.length);
+    }
+    return text;
+  }
+
+  /// One-line instruction shown above the question grid, based on level type.
+  /// Returns null when no banner is needed (questions are already self-explanatory).
+  String? _instructionForLevel() {
+    final type = _levelConfig?.type;
+    if (type == null) return null;
+    switch (type) {
+      case LevelType.factorization:
+        return 'Factor each expression';
+      case LevelType.quadratic:
+        return 'Solve each equation';
+      case LevelType.algebra:
+        return 'Solve for x';
+      case LevelType.fractions:
+        return 'Simplify each fraction';
+      case LevelType.polynomials:
+        return 'Expand each expression';
+      case LevelType.numberWriting:
+        return 'Write each number';
+      case LevelType.inequalities:
+        return 'Solve each inequality';
+      case LevelType.powers:
+        return 'Evaluate each expression';
+      case LevelType.roots:
+        return 'Find each root';
+      default:
+        return null;
     }
   }
 
