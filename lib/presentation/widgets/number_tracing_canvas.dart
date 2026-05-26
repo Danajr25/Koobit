@@ -467,27 +467,40 @@ class _NumberTracingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw guide path
+    // Draw guide as the actual numeral glyph (rendered as text) for a clean,
+    // readable shape rather than hand-built point lists.
     if (guidePoints.isNotEmpty) {
-      final guidePaint = Paint()
-        ..color = isComplete ? Colors.green.withValues(alpha: 0.3) : Colors.grey[300]!
-        ..strokeWidth = 25
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
-
-      final guidePath = Path();
-      guidePath.moveTo(guidePoints.first.dx, guidePoints.first.dy);
-      for (int i = 1; i < guidePoints.length; i++) {
-        guidePath.lineTo(guidePoints[i].dx, guidePoints[i].dy);
-      }
-      canvas.drawPath(guidePath, guidePaint);
+      final numText = number == 10 ? '10' : '$number';
+      final glyphHeight = size.height * 0.85;
+      final fontSize = glyphHeight; // text height ~= font size
+      final glyphPainter = TextPainter(
+        text: TextSpan(
+          text: numText,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w900,
+            color: isComplete
+                ? Colors.green.withValues(alpha: 0.30)
+                : Colors.grey.shade300,
+            height: 1.0,
+          ),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      )..layout();
+      glyphPainter.paint(
+        canvas,
+        Offset(
+          (size.width - glyphPainter.width) / 2,
+          (size.height - glyphPainter.height) / 2,
+        ),
+      );
 
       // Draw START dot (green)
       final startDotPaint = Paint()
         ..color = Colors.green
         ..style = PaintingStyle.fill;
       canvas.drawCircle(guidePoints.first, 14, startDotPaint);
-      
+
       // Draw END dot (red)
       final endDotPaint = Paint()
         ..color = Colors.red

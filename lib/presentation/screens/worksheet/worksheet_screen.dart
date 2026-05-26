@@ -58,7 +58,6 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   // Constants for worksheet structure
   static const int questionsPerPage = 10;
   static const int totalPages = 10;
-  static const int totalQuestions = 100; // 10 pages × 10 questions
 
   // Actual pages based on generated question count (may be fewer in debug mode)
   int get _actualTotalPages => (_questions.length / questionsPerPage).ceil().clamp(1, totalPages);

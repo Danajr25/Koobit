@@ -1333,6 +1333,7 @@ class _GameSceneState extends State<_GameScene>
               t: _ctrl.value,
               correctCount: widget.correctCount,
               accent: widget.accent,
+              level: widget.level,
             );
         }
         return CustomPaint(painter: painter, size: Size.infinite);
@@ -1341,71 +1342,155 @@ class _GameSceneState extends State<_GameScene>
   }
 }
 
-// ── Math Builder – City skyline ───────────────────────────────────────────────
+// ── Math Builder – City skyline (varies per level) ──────────────────────────
 class _CityPainter extends CustomPainter {
   final double t;
   final int correctCount;
   final Color accent;
+  final int level;
 
-  const _CityPainter(
-      {required this.t, required this.correctCount, required this.accent});
+  const _CityPainter({
+    required this.t,
+    required this.correctCount,
+    required this.accent,
+    required this.level,
+  });
 
-  static const List<List<double>> _buildings = [
-    [0.02, 0.13, 0.55],
-    [0.17, 0.11, 0.72],
-    [0.30, 0.15, 0.45],
-    [0.47, 0.12, 0.67],
-    [0.61, 0.10, 0.56],
-    [0.73, 0.13, 0.42],
-    [0.88, 0.11, 0.62],
-  ];
-
-  static const List<List<double>> _starCoords = [
-    [0.08, 0.08], [0.22, 0.12], [0.40, 0.06], [0.55, 0.14],
-    [0.68, 0.07], [0.80, 0.10], [0.92, 0.05], [0.15, 0.22],
-    [0.35, 0.18], [0.60, 0.20], [0.78, 0.17], [0.95, 0.22],
+  // 10 hand-picked themes keyed by level (1..10).
+  // [skyTop, skyBottom, groundColor, isNight (0/1), sunOrMoonX (0..1)]
+  static const List<List<dynamic>> _themes = [
+    // L1 – early dawn
+    [Color(0xFF1B1530), Color(0xFFE96A8C), Color(0xFF2A1A2E), 0, 0.15],
+    // L2 – sunrise
+    [Color(0xFF2A1A40), Color(0xFFFFB066), Color(0xFF3A2535), 0, 0.20],
+    // L3 – morning
+    [Color(0xFF87B8E8), Color(0xFFFFE6B0), Color(0xFF335060), 0, 0.30],
+    // L4 – clear day
+    [Color(0xFF4FA8F0), Color(0xFFB8E0FF), Color(0xFF3A5A70), 0, 0.50],
+    // L5 – cloudy day
+    [Color(0xFF6F8FB0), Color(0xFFD0DCE8), Color(0xFF40556A), 0, 0.55],
+    // L6 – afternoon
+    [Color(0xFF3D7CC9), Color(0xFFFFC58A), Color(0xFF38485C), 0, 0.70],
+    // L7 – sunset
+    [Color(0xFF402060), Color(0xFFFF7050), Color(0xFF2A1530), 0, 0.82],
+    // L8 – dusk
+    [Color(0xFF15123A), Color(0xFFB04580), Color(0xFF1A0F2A), 0, 0.88],
+    // L9 – night with moon
+    [Color(0xFF070B20), Color(0xFF1A1040), Color(0xFF111128), 1, 0.85],
+    // L10 – deep night, snow
+    [Color(0xFF02030F), Color(0xFF0E0B30), Color(0xFF181B30), 1, 0.20],
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final lvl = level.clamp(1, 10);
+    final theme = _themes[lvl - 1];
+    final Color skyTop = theme[0] as Color;
+    final Color skyBottom = theme[1] as Color;
+    final Color ground = theme[2] as Color;
+    final bool isNight = (theme[3] as int) == 1;
+    final double bodyX = theme[4] as double;
+
+    // Building layout: deterministic per level, 5-9 buildings.
+    final rng = Random(lvl * 73 + 1);
+    final buildingCount = 5 + rng.nextInt(5);
+    final buildings = <List<double>>[];
+    double cursor = 0.01;
+    for (int i = 0; i < buildingCount; i++) {
+      final bw = 0.07 + rng.nextDouble() * 0.08;
+      final bh = 0.30 + rng.nextDouble() * 0.45;
+      buildings.add([cursor, bw, bh]);
+      cursor += bw + 0.005 + rng.nextDouble() * 0.025;
+      if (cursor > 0.95) break;
+    }
 
     // Sky gradient
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF070B20), Color(0xFF1A1040)],
+          colors: [skyTop, skyBottom],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // Stars
-    for (int i = 0; i < _starCoords.length; i++) {
-      final alpha =
-          (0.4 + 0.6 * ((sin(t * 2 * pi + i * 0.9) + 1) / 2)).clamp(0.0, 1.0);
-      canvas.drawCircle(
-        Offset(w * _starCoords[i][0], h * _starCoords[i][1]),
-        i % 4 == 0 ? 2.0 : 1.2,
-        Paint()..color = Colors.white.withValues(alpha: alpha),
-      );
+    // Stars (only at night/dusk)
+    if (isNight || lvl == 1 || lvl == 8) {
+      const starCoords = [
+        [0.08, 0.08], [0.22, 0.12], [0.40, 0.06], [0.55, 0.14],
+        [0.68, 0.07], [0.80, 0.10], [0.92, 0.05], [0.15, 0.22],
+        [0.35, 0.18], [0.60, 0.20], [0.78, 0.17], [0.95, 0.22],
+      ];
+      for (int i = 0; i < starCoords.length; i++) {
+        final alpha =
+            (0.4 + 0.6 * ((sin(t * 2 * pi + i * 0.9) + 1) / 2))
+                .clamp(0.0, 1.0);
+        canvas.drawCircle(
+          Offset(w * starCoords[i][0], h * starCoords[i][1]),
+          i % 4 == 0 ? 2.0 : 1.2,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
+      }
     }
 
-    // Moon
-    canvas.drawCircle(Offset(w * 0.87, h * 0.15), 16,
-        Paint()..color = const Color(0xFFECE9C8));
-    canvas.drawCircle(Offset(w * 0.90, h * 0.13), 13,
-        Paint()..color = const Color(0xFF0E1230));
+    // Sun or Moon
+    final bodyCenter = Offset(w * bodyX, h * 0.16);
+    if (isNight) {
+      canvas.drawCircle(
+          bodyCenter, 16, Paint()..color = const Color(0xFFECE9C8));
+      canvas.drawCircle(
+          bodyCenter.translate(4, -2), 13, Paint()..color = skyTop);
+    } else {
+      // Sun with soft glow
+      canvas.drawCircle(
+        bodyCenter,
+        24,
+        Paint()
+          ..color = Colors.yellow.withValues(alpha: 0.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
+      canvas.drawCircle(
+          bodyCenter, 14, Paint()..color = const Color(0xFFFFE082));
+    }
+
+    // Clouds (days 4 and 5)
+    if (lvl == 4 || lvl == 5 || lvl == 6) {
+      final cloudPaint = Paint()..color = Colors.white.withValues(alpha: 0.55);
+      void cloud(double cx, double cy, double cs) {
+        canvas.drawCircle(Offset(w * cx, h * cy), cs, cloudPaint);
+        canvas.drawCircle(
+            Offset(w * cx + cs * 0.9, h * cy + 1), cs * 0.9, cloudPaint);
+        canvas.drawCircle(
+            Offset(w * cx - cs * 0.85, h * cy + 1), cs * 0.85, cloudPaint);
+      }
+
+      final drift = (t * 0.2) % 1.0;
+      cloud(0.1 + drift * 0.3, 0.18, 9);
+      cloud(0.55 + drift * 0.2, 0.10, 7);
+    }
+
+    // Snow (L10)
+    if (lvl == 10) {
+      final snowPaint = Paint()..color = Colors.white.withValues(alpha: 0.8);
+      for (int i = 0; i < 18; i++) {
+        final fx = ((i * 137 + t * 80) % w);
+        final fy = ((i * 53 + t * 140) % (h * 0.8));
+        canvas.drawCircle(Offset(fx, fy), i % 3 == 0 ? 1.8 : 1.2, snowPaint);
+      }
+    }
 
     // Ground
-    canvas.drawRect(Rect.fromLTWH(0, h * 0.76, w, h * 0.24),
-        Paint()..color = const Color(0xFF111128));
+    canvas.drawRect(
+        Rect.fromLTWH(0, h * 0.76, w, h * 0.24), Paint()..color = ground);
 
     // Buildings
-    for (int i = 0; i < _buildings.length; i++) {
-      final def = _buildings[i];
+    final baseBuildingColor =
+        isNight ? const Color(0xFF161630) : const Color(0xFF1F2A3C);
+    for (int i = 0; i < buildings.length; i++) {
+      final def = buildings[i];
       final bx = w * def[0];
       final bw = w * def[1];
       final bh = h * def[2];
@@ -1416,8 +1501,8 @@ class _CityPainter extends CustomPainter {
         Rect.fromLTWH(bx, by, bw, bh),
         Paint()
           ..color = isLit
-              ? Color.lerp(const Color(0xFF1E2045), accent, 0.25)!
-              : const Color(0xFF161630),
+              ? Color.lerp(baseBuildingColor, accent, 0.30)!
+              : baseBuildingColor,
       );
       if (isLit) {
         canvas.drawRect(
@@ -1451,11 +1536,26 @@ class _CityPainter extends CustomPainter {
             Paint()
               ..color = lit
                   ? accent.withValues(alpha: winAlpha)
-                  : const Color(0xFF0D0E20),
+                  : (isNight
+                      ? const Color(0xFF0D0E20)
+                      : const Color(0xFF18233A)),
           );
         }
       }
     }
+
+    // Level label badge (top-right)
+    final lblTp = TextPainter(
+      text: TextSpan(
+        text: 'L$lvl',
+        style: TextStyle(
+            color: accent.withValues(alpha: 0.9),
+            fontSize: 10,
+            fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    lblTp.paint(canvas, Offset(w - lblTp.width - 8, 6));
 
     // Score label
     final tp = TextPainter(
@@ -1471,7 +1571,7 @@ class _CityPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CityPainter old) =>
-      old.t != t || old.correctCount != correctCount;
+      old.t != t || old.correctCount != correctCount || old.level != level;
 }
 
 // ── Number Pet Adventure – Pet character ────────────────────────────────────
@@ -1526,12 +1626,20 @@ class _PetPainter extends CustomPainter {
           Offset(fx, fy), 2.5, Paint()..color = Colors.yellow.withValues(alpha: fa));
     }
 
-    // Pet
+    // Pet – walks left/right across the scene, bounces, occasionally blinks
     final petR = 44.0 * (0.65 + correctCount * 0.07).clamp(0.65, 1.0);
-    final bob = 5.0 * sin(t * 2 * pi);
-    final pc = Offset(w * 0.5, h * 0.50 + bob);
+    // Horizontal walk: smooth back-and-forth between left and right margins
+    final walkPhase = sin(t * 2 * pi); // -1..1
+    final walkX = w * 0.5 + walkPhase * (w * 0.32);
+    // Direction (+1 right, -1 left) — used to flip features
+    final facing = cos(t * 2 * pi) >= 0 ? 1.0 : -1.0;
+    // Walk-cycle bounce (twice per cycle, like footsteps)
+    final stepBob = (sin(t * 4 * pi)).abs() * 6.0;
+    // Slight forward lean in the direction of motion
+    final tilt = 0.10 * cos(t * 2 * pi);
+    final pc = Offset(walkX, h * 0.50 - stepBob);
 
-    // Shadow
+    // Shadow follows feet
     canvas.drawOval(
       Rect.fromCenter(
           center: Offset(pc.dx, h * 0.75),
@@ -1540,12 +1648,23 @@ class _PetPainter extends CustomPainter {
       Paint()..color = Colors.black38,
     );
 
+    // Apply tilt + facing transform around the pet center
+    canvas.save();
+    canvas.translate(pc.dx, pc.dy);
+    canvas.rotate(tilt);
+    canvas.scale(facing, 1.0);
+    canvas.translate(-pc.dx, -pc.dy);
+
     // Ears (behind body)
     for (final side in [-1.0, 1.0]) {
+      // Ear wiggle
+      final earWiggle = 0.05 * sin(t * 4 * pi + side);
       canvas.drawPath(
         Path()
-          ..moveTo(pc.dx + side * petR * 0.55, pc.dy - petR * 0.45)
-          ..lineTo(pc.dx + side * petR * 0.28, pc.dy - petR * 0.95)
+          ..moveTo(pc.dx + side * petR * 0.55,
+              pc.dy - petR * (0.45 + earWiggle))
+          ..lineTo(pc.dx + side * petR * 0.28,
+              pc.dy - petR * (0.95 + earWiggle))
           ..lineTo(pc.dx + side * petR * 0.08, pc.dy - petR * 0.58)
           ..close(),
         Paint()..color = accent,
@@ -1567,15 +1686,55 @@ class _PetPainter extends CustomPainter {
         petR * 0.38,
         Paint()..color = Colors.white.withValues(alpha: 0.12));
 
-    // Eyes
+    // Feet (alternating step lift)
+    final leftLift = max(0.0, sin(t * 4 * pi)) * 4.0;
+    final rightLift = max(0.0, -sin(t * 4 * pi)) * 4.0;
+    final footPaint = Paint()..color = Color.lerp(accent, Colors.black, 0.35)!;
+    canvas.drawOval(
+      Rect.fromCenter(
+          center: Offset(pc.dx - petR * 0.35, pc.dy + petR * 0.95 - leftLift),
+          width: petR * 0.5,
+          height: petR * 0.22),
+      footPaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+          center: Offset(pc.dx + petR * 0.35, pc.dy + petR * 0.95 - rightLift),
+          width: petR * 0.5,
+          height: petR * 0.22),
+      footPaint,
+    );
+
+    // Eyes – blink every ~4 seconds
+    final blinkPhase = (t * 2.0) % 1.0; // 0..1 every 2s of anim cycle
+    final isBlinking = blinkPhase < 0.06;
     final eyeY = pc.dy - petR * 0.12;
     for (final ex in [-petR * 0.28, petR * 0.28]) {
+      // Eye whites
       canvas.drawCircle(
           Offset(pc.dx + ex, eyeY), petR * 0.22, Paint()..color = Colors.white);
-      canvas.drawCircle(Offset(pc.dx + ex + 1.5, eyeY + 1.5), petR * 0.12,
-          Paint()..color = Colors.black);
-      canvas.drawCircle(Offset(pc.dx + ex - 2.5, eyeY - 2.5), petR * 0.04,
-          Paint()..color = Colors.white);
+      if (isBlinking) {
+        // Closed eyelid line
+        canvas.drawLine(
+          Offset(pc.dx + ex - petR * 0.22, eyeY),
+          Offset(pc.dx + ex + petR * 0.22, eyeY),
+          Paint()
+            ..color = Colors.black87
+            ..strokeWidth = 2.5
+            ..strokeCap = StrokeCap.round,
+        );
+      } else {
+        // Pupils track walk direction slightly
+        final pupilShift = facing * 1.5;
+        canvas.drawCircle(
+            Offset(pc.dx + ex + pupilShift, eyeY + 1.5),
+            petR * 0.12,
+            Paint()..color = Colors.black);
+        canvas.drawCircle(
+            Offset(pc.dx + ex - 2.5 + pupilShift, eyeY - 2.5),
+            petR * 0.04,
+            Paint()..color = Colors.white);
+      }
     }
 
     // Mouth
@@ -1597,6 +1756,8 @@ class _PetPainter extends CustomPainter {
       canvas.drawLine(Offset(pc.dx - petR * 0.15, my),
           Offset(pc.dx + petR * 0.15, my), mouthPaint);
     }
+
+    canvas.restore();
 
     // Hearts when doing well
     if (correctCount >= 2) {
@@ -1777,6 +1938,101 @@ class _SpacePainter extends CustomPainter {
         ..strokeWidth = 4 + 2 * sin(t * 6 * pi).abs()
         ..strokeCap = StrokeCap.round,
     );
+
+    // ===== Shooting action =====
+    // Asteroid target drifts in from the right
+    final astCycle = (t * 0.6) % 1.0; // one asteroid per ~1.67s of anim
+    final astStartX = w + 20;
+    final astEndX = rx + 40;
+    final astX = astStartX + (astEndX - astStartX) * astCycle;
+    final astY = ry + sin(astCycle * pi * 2 + 1.0) * 10;
+    final astR = 8.0;
+    // Laser fires when asteroid is in front of the rocket (mid cycle)
+    final laserActive = astCycle > 0.35 && astCycle < 0.75;
+    // Asteroid explodes near the end of cycle
+    final exploding = astCycle > 0.72 && astCycle < 0.88;
+    final gone = astCycle >= 0.88;
+
+    if (!gone && !exploding) {
+      // Asteroid body
+      canvas.drawCircle(
+        Offset(astX, astY),
+        astR,
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.3),
+            colors: const [Color(0xFFB07050), Color(0xFF402010)],
+          ).createShader(Rect.fromCircle(
+              center: Offset(astX, astY), radius: astR)),
+      );
+      // Crater specks
+      canvas.drawCircle(Offset(astX - 2, astY - 1), 1.5,
+          Paint()..color = Colors.black.withValues(alpha: 0.4));
+      canvas.drawCircle(Offset(astX + 2.5, astY + 2), 1.0,
+          Paint()..color = Colors.black.withValues(alpha: 0.4));
+    }
+
+    if (laserActive && !exploding && !gone) {
+      // Bright laser beam from nose cone to asteroid
+      final laserStart = Offset(rx + 22, ry);
+      final laserEnd = Offset(astX, astY);
+      // Outer glow
+      canvas.drawLine(
+        laserStart,
+        laserEnd,
+        Paint()
+          ..color = accent.withValues(alpha: 0.35)
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+      // Core beam
+      canvas.drawLine(
+        laserStart,
+        laserEnd,
+        Paint()
+          ..color = const Color(0xFFFFFFFF)
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round,
+      );
+      // Muzzle flash at nose
+      canvas.drawCircle(
+        laserStart,
+        3 + 2 * sin(t * 30).abs(),
+        Paint()..color = accent.withValues(alpha: 0.9),
+      );
+    }
+
+    if (exploding) {
+      // Explosion at asteroid position
+      final explodeT = ((astCycle - 0.72) / 0.16).clamp(0.0, 1.0);
+      final boomR = 6 + 18 * explodeT;
+      canvas.drawCircle(
+        Offset(astX, astY),
+        boomR,
+        Paint()
+          ..color = const Color(0xFFFFB347)
+              .withValues(alpha: (1.0 - explodeT) * 0.9),
+      );
+      canvas.drawCircle(
+        Offset(astX, astY),
+        boomR * 0.55,
+        Paint()
+          ..color = const Color(0xFFFFF59D)
+              .withValues(alpha: 1.0 - explodeT),
+      );
+      // Debris specks flying out
+      for (int i = 0; i < 6; i++) {
+        final ang = i * (pi / 3);
+        final d = boomR * 0.9;
+        canvas.drawCircle(
+          Offset(astX + cos(ang) * d, astY + sin(ang) * d),
+          1.8,
+          Paint()
+            ..color = const Color(0xFFFFCC80)
+                .withValues(alpha: 1.0 - explodeT),
+        );
+      }
+    }
 
     // Mission label
     final tp = TextPainter(
