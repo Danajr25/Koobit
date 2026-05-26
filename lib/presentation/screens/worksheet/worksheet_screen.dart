@@ -73,7 +73,11 @@ class _WorksheetScreenState extends State<WorksheetScreen>
     _questions = _generator.generateQuestions(
       levelNumber: widget.levelNumber,
       worksheetId: _worksheetId,
-      count: kDebugMode ? 20 : totalQuestions, // dev: 20 | prod: 100
+      // Each page has `questionsPerPage` questions; total pages comes from the
+      // level config (defaults to 10). In debug mode we cap to keep tests fast.
+      count: kDebugMode
+          ? ((_levelConfig?.pages ?? 1) * 10).clamp(10, 30)
+          : (_levelConfig?.pages ?? totalPages) * questionsPerPage,
     );
     
     _startTime = DateTime.now();

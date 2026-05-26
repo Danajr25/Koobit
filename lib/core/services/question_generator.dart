@@ -198,19 +198,19 @@ class QuestionGenerator {
     int pageNumber,
   ) {
     int a, b;
-    
+
     switch (config.level) {
-      case 10: // +1, +2
+      case 10: // +1, +2  -> page 1 = +1, page 2 = +2
         a = _random.nextInt(9) + 1;
-        b = _random.nextInt(2) + 1;
+        b = pageNumber.clamp(1, 2);
         break;
-      case 11: // +3 to +5
+      case 11: // +3 to +5 -> page 1 = +3, page 2 = +4, page 3 = +5
         a = _random.nextInt(9) + 1;
-        b = _random.nextInt(3) + 3;
+        b = (pageNumber + 2).clamp(3, 5);
         break;
-      case 12: // +6 to +9
+      case 12: // +6 to +9 -> page 1 = +6, ... page 4 = +9
         a = _random.nextInt(9) + 1;
-        b = _random.nextInt(4) + 6;
+        b = (pageNumber + 5).clamp(6, 9);
         break;
       case 13: // 2-digit
         a = _random.nextInt(90) + 10;
@@ -240,14 +240,14 @@ class QuestionGenerator {
     int pageNumber,
   ) {
     int a, b;
-    
+
     switch (config.level) {
-      case 14: // -1 to -5
-        b = _random.nextInt(5) + 1;
+      case 14: // -1 to -5 -> page 1 = -1, ... page 5 = -5
+        b = pageNumber.clamp(1, 5);
         a = b + _random.nextInt(10);
         break;
-      case 15: // -6 to -9
-        b = _random.nextInt(4) + 6;
+      case 15: // -6 to -9 -> page 1 = -6, ... page 4 = -9
+        b = (pageNumber + 5).clamp(6, 9);
         a = b + _random.nextInt(10);
         break;
       case 16: // 2-digit
@@ -278,15 +278,15 @@ class QuestionGenerator {
     int pageNumber,
   ) {
     int a, b;
-    
+
     switch (config.level) {
-      case 17: // ×1 to ×5
+      case 17: // ×1 to ×5 -> page 1 = ×1, ... page 5 = ×5
         a = _random.nextInt(10) + 1;
-        b = _random.nextInt(5) + 1;
+        b = pageNumber.clamp(1, 5);
         break;
-      case 18: // ×6 to ×12
+      case 18: // ×6 to ×12 -> page 1 = ×6, ... page 7 = ×12
         a = _random.nextInt(10) + 1;
-        b = _random.nextInt(7) + 6;
+        b = (pageNumber + 5).clamp(6, 12);
         break;
       default:
         a = _random.nextInt(10) + 1;
@@ -312,15 +312,15 @@ class QuestionGenerator {
     int pageNumber,
   ) {
     int divisor, quotient, dividend;
-    
+
     switch (config.level) {
-      case 19: // ÷1 to ÷5
-        divisor = _random.nextInt(5) + 1;
+      case 19: // ÷1 to ÷5 -> page 1 = ÷1, ... page 5 = ÷5
+        divisor = pageNumber.clamp(1, 5);
         quotient = _random.nextInt(10) + 1;
         dividend = divisor * quotient;
         break;
-      case 20: // ÷6 to ÷12
-        divisor = _random.nextInt(7) + 6;
+      case 20: // ÷6 to ÷12 -> page 1 = ÷6, ... page 7 = ÷12
+        divisor = (pageNumber + 5).clamp(6, 12);
         quotient = _random.nextInt(10) + 1;
         dividend = divisor * quotient;
         break;

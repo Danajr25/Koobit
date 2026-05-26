@@ -36,6 +36,9 @@ class LevelConfig {
   final int questionsPerWorksheet;
   final int timeMinutes;
   final double passPercentage;
+  /// Number of pages (sub-worksheets) in this level. Each page focuses on one
+  /// progressive operand (e.g. page 1 = +1, page 2 = +2). Default 10.
+  final int pages;
 
   LevelConfig({
     required this.level,
@@ -47,6 +50,7 @@ class LevelConfig {
     this.questionsPerWorksheet = 20,
     this.timeMinutes = 10,
     this.passPercentage = 0.95,
+    this.pages = 10,
   });
 
   String getTopic(String languageCode) {
@@ -191,6 +195,7 @@ class LevelConfiguration {
           descriptionEn: 'Single-digit addition basics',
           descriptionMs: 'Asas penambahan satu digit',
           type: LevelType.addition,
+          pages: 2,
         ),
         LevelConfig(
           level: 11,
@@ -199,6 +204,7 @@ class LevelConfiguration {
           descriptionEn: 'Single-digit addition',
           descriptionMs: 'Penambahan satu digit',
           type: LevelType.addition,
+          pages: 3,
         ),
         LevelConfig(
           level: 12,
@@ -207,6 +213,7 @@ class LevelConfiguration {
           descriptionEn: 'Single-digit addition',
           descriptionMs: 'Penambahan satu digit',
           type: LevelType.addition,
+          pages: 4,
         ),
         LevelConfig(
           level: 13,
@@ -215,6 +222,7 @@ class LevelConfiguration {
           descriptionEn: 'Two-digit addition',
           descriptionMs: 'Penambahan dua digit',
           type: LevelType.addition,
+          pages: 4,
         ),
       ],
     ),
@@ -233,6 +241,7 @@ class LevelConfiguration {
           descriptionEn: 'Single-digit subtraction',
           descriptionMs: 'Penolakan satu digit',
           type: LevelType.subtraction,
+          pages: 5,
         ),
         LevelConfig(
           level: 15,
@@ -241,6 +250,7 @@ class LevelConfiguration {
           descriptionEn: 'Larger single-digit subtraction',
           descriptionMs: 'Penolakan satu digit yang lebih besar',
           type: LevelType.subtraction,
+          pages: 4,
         ),
         LevelConfig(
           level: 16,
@@ -249,6 +259,7 @@ class LevelConfiguration {
           descriptionEn: 'Two-digit subtraction',
           descriptionMs: 'Penolakan dua digit',
           type: LevelType.subtraction,
+          pages: 4,
         ),
       ],
     ),
@@ -267,6 +278,7 @@ class LevelConfiguration {
           descriptionEn: 'Basic multiplication tables',
           descriptionMs: 'Jadual pendaraban asas',
           type: LevelType.multiplication,
+          pages: 5,
         ),
         LevelConfig(
           level: 18,
@@ -275,6 +287,7 @@ class LevelConfiguration {
           descriptionEn: 'Advanced multiplication tables',
           descriptionMs: 'Jadual pendaraban lanjutan',
           type: LevelType.multiplication,
+          pages: 7,
         ),
       ],
     ),
@@ -293,6 +306,7 @@ class LevelConfiguration {
           descriptionEn: 'Basic division',
           descriptionMs: 'Pembahagian asas',
           type: LevelType.division,
+          pages: 5,
         ),
         LevelConfig(
           level: 20,
@@ -301,6 +315,7 @@ class LevelConfiguration {
           descriptionEn: 'Advanced division',
           descriptionMs: 'Pembahagian lanjutan',
           type: LevelType.division,
+          pages: 7,
         ),
       ],
     ),
