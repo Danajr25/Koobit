@@ -163,16 +163,23 @@ class _ChildSelectionScreenState extends State<ChildSelectionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: 130,
+              height: 130,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                gradient: AppColors.neonGradient,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    offset: const Offset(0, 8),
+                    blurRadius: 0,
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.child_care,
-                size: 60,
-                color: AppColors.primary,
+                Icons.child_care_rounded,
+                size: 68,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
@@ -245,23 +252,33 @@ class _ChildCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Avatar
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: AppColors.primary,
-                backgroundImage: child.avatarUrl != null
-                    ? NetworkImage(child.avatarUrl!)
-                    : null,
-                child: child.avatarUrl == null
-                    ? Text(
-                        child.name.isNotEmpty ? child.name[0].toUpperCase() : '?',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      )
-                    : null,
+              // Avatar with rainbow ring
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.neonGradient,
+                ),
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundColor: AppColors.surface,
+                  backgroundImage: child.avatarUrl != null
+                      ? NetworkImage(child.avatarUrl!)
+                      : null,
+                  child: child.avatarUrl == null
+                      ? Text(
+                          child.name.isNotEmpty
+                              ? child.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                            fontFamily: 'Nunito',
+                          ),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: 16),
               // Info

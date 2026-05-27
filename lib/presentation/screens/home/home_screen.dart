@@ -6,14 +6,11 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/child_model.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Home screen showing child's dashboard.
+/// Home screen — cartoony kid-friendly dashboard.
 class HomeScreen extends StatelessWidget {
   final ChildModel child;
 
-  const HomeScreen({
-    super.key,
-    required this.child,
-  });
+  const HomeScreen({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -23,38 +20,44 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Grid background
-          const Positioned.fill(
-            child: CyberGridBackground(),
+          // Soft polka-dot wash + a couple of pastel blob accents
+          const Positioned.fill(child: CyberGridBackground()),
+          Positioned(
+            top: -40,
+            right: -40,
+            child: _blob(180, AppColors.accent.withValues(alpha: 0.25)),
           ),
-          // Main content
+          Positioned(
+            top: 220,
+            left: -60,
+            child: _blob(160, AppColors.primaryLight.withValues(alpha: 0.18)),
+          ),
+
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header with child info
                   _buildHeader(context, l10n),
-                  const SizedBox(height: 24),
-
-                  // Stats bar
+                  const SizedBox(height: 22),
                   _buildStatsBar(context),
                   const SizedBox(height: 24),
-
-                  // Today's worksheet card
                   _buildWorksheetCard(context, l10n),
-                  const SizedBox(height: 24),
-
-                  // Quick access grid
-                  Text(
-                    l10n.explore,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                  const SizedBox(height: 26),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      l10n.explore,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   _buildQuickAccessGrid(context, l10n),
                 ],
               ),
@@ -65,91 +68,113 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _blob(double size, Color color) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
+
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     return Row(
       children: [
-        // Avatar with glow
+        // Avatar with rainbow ring (no neon glow)
         GestureDetector(
-          onTap: () => _showChildSwitcher(context),
+          onTap: () => context.go('/children'),
           child: Container(
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.all(3.5),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: AppColors.neonGradient,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                  blurRadius: 12,
-                  spreadRadius: 1,
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: CircleAvatar(
-              radius: 30,
+              radius: 32,
               backgroundColor: AppColors.surface,
-              backgroundImage:
-                  child.avatarUrl != null ? NetworkImage(child.avatarUrl!) : null,
+              backgroundImage: child.avatarUrl != null
+                  ? NetworkImage(child.avatarUrl!)
+                  : null,
               child: child.avatarUrl == null
                   ? Text(
                       child.name.isNotEmpty ? child.name[0].toUpperCase() : '?',
                       style: const TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.primary,
+                        fontFamily: 'Nunito',
                       ),
                     )
                   : null,
             ),
           ),
         ),
-        const SizedBox(width: 16),
-
-        // Greeting and level
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${l10n.hello}, ${child.name}! 👋',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                '${l10n.hello}, ${child.name}!',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Nunito',
+                ),
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
+                  gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                  ),
                 ),
-                child: Text(
-                  '${l10n.level} ${child.currentLevel}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.emoji_events_rounded,
+                        color: Colors.white, size: 16),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${l10n.level} ${child.currentLevel}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-
-        // Settings button
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.border,
-            ),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: IconButton(
             onPressed: () => context.push('/settings'),
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+            icon: const Icon(Icons.settings_rounded,
+                color: AppColors.textSecondary),
           ),
         ),
       ],
@@ -159,52 +184,37 @@ class HomeScreen extends StatelessWidget {
   Widget _buildStatsBar(BuildContext context) {
     return GlowCard(
       glowColor: AppColors.primary,
-      glowIntensity: 0.15,
-      padding: const EdgeInsets.all(16),
+      glowIntensity: 0.1,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem(
-            context,
-            Icons.star_rounded,
-            child.totalStars.toString(),
-            'Stars',
-            AppColors.gold,
-          ),
-          _buildDivider(),
-          _buildStatItem(
-            context,
+          _stat(Icons.star_rounded, child.totalStars.toString(), 'Stars',
+              AppColors.gold),
+          _divider(),
+          _stat(
             Icons.local_fire_department_rounded,
             '${child.currentStreak}',
             'Streak',
             child.isStreakActive ? AppColors.secondary : AppColors.textLight,
           ),
-          _buildDivider(),
-          _buildStatItem(
-            context,
-            Icons.videogame_asset_rounded,
-            child.gameTokens.toString(),
-            'Tokens',
-            AppColors.accent,
-          ),
+          _divider(),
+          _stat(Icons.videogame_asset_rounded, child.gameTokens.toString(),
+              'Tokens', AppColors.accent),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-  ) {
+  Widget _stat(IconData icon, String value, String label, Color color) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withValues(alpha: 0.18),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -212,57 +222,55 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            fontFamily: 'Nunito',
+          ),
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 12,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Nunito',
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDivider() {
-    return Container(
-      height: 50,
-      width: 1,
-      color: AppColors.border,
-    );
-  }
+  Widget _divider() => Container(
+        height: 50,
+        width: 1.2,
+        color: AppColors.border,
+      );
 
   Widget _buildWorksheetCard(BuildContext context, AppLocalizations l10n) {
     final didToday = child.didWorksheetToday;
+    final accent = didToday ? AppColors.success : AppColors.secondary;
 
     return GestureDetector(
       onTap: didToday ? null : () => _startWorksheet(context),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: didToday
-                ? [AppColors.success.withValues(alpha: 0.8), AppColors.successDark]
-                : [AppColors.primary.withValues(alpha: 0.8), AppColors.primaryDark],
+                ? const [Color(0xFF6BD3A3), Color(0xFF4CD964)]
+                : const [Color(0xFFFFB07A), Color(0xFFFF8A3D)],
           ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: (didToday ? AppColors.success : AppColors.primary).withValues(alpha: 0.5),
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: (didToday ? AppColors.success : AppColors.primary)
-                  .withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: accent.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
@@ -274,38 +282,38 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                    ),
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: Icon(
-                    didToday ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+                    didToday
+                        ? Icons.check_circle_rounded
+                        : Icons.menu_book_rounded,
                     color: Colors.white,
-                    size: 32,
+                    size: 30,
                   ),
                 ),
                 const Spacer(),
                 if (!didToday)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withValues(alpha: 0.22),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
                     ),
-                    child: Row(
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
+                        Icon(Icons.timer_rounded,
+                            color: Colors.white, size: 16),
+                        SizedBox(width: 5),
                         Text(
                           '~10 min',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Nunito',
                           ),
                         ),
                       ],
@@ -313,45 +321,37 @@ class HomeScreen extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Text(
-              didToday
-                  ? l10n.worksheetCompleted
-                  : l10n.todaysWorksheet,
+              didToday ? l10n.worksheetCompleted : l10n.todaysWorksheet,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Nunito',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              didToday
-                  ? l10n.comeBackTomorrow
-                  : l10n.worksheetDescription,
+              didToday ? l10n.comeBackTomorrow : l10n.worksheetDescription,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white.withValues(alpha: 0.92),
                 fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Nunito',
               ),
             ),
             if (!didToday) ...[
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  l10n.startNow,
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: CyberButton(
+                  text: l10n.startNow,
+                  icon: Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  textColor: AppColors.secondaryDark,
+                  height: 50,
+                  onPressed: () => _startWorksheet(context),
                 ),
               ),
             ],
@@ -362,7 +362,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildQuickAccessGrid(BuildContext context, AppLocalizations l10n) {
-    final items = [
+    final items = <_QuickAccessItem>[
       _QuickAccessItem(
         icon: Icons.map_rounded,
         label: l10n.levelMap,
@@ -372,7 +372,7 @@ class HomeScreen extends StatelessWidget {
       _QuickAccessItem(
         icon: Icons.calendar_month_rounded,
         label: l10n.calendar,
-        color: AppColors.accent,
+        color: AppColors.accentDark,
         route: '/calendar',
       ),
       _QuickAccessItem(
@@ -395,83 +395,85 @@ class HomeScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.3,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 1.35,
       ),
       itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return _buildQuickAccessCard(context, item);
-      },
+      itemBuilder: (context, index) =>
+          _buildQuickAccessCard(context, items[index]),
     );
   }
 
   Widget _buildQuickAccessCard(BuildContext context, _QuickAccessItem item) {
-    return GestureDetector(
+    return GlowCard(
+      glowColor: item.color,
+      glowIntensity: 0.14,
+      padding: const EdgeInsets.all(16),
       onTap: () => context.push(item.route, extra: child),
-      child: GlowCard(
-        glowColor: item.color,
-        glowIntensity: 0.2,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: item.color.withValues(alpha: 0.3),
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      item.color,
+                      Color.lerp(item.color, Colors.white, 0.35)!,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(item.icon, color: item.color),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: item.color.withValues(alpha: 0.35),
+                      offset: const Offset(0, 5),
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
-                if (item.badge != null) ...[
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: item.color.withValues(alpha: 0.5),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      item.badge!,
-                      style: const TextStyle(
-                        color: AppColors.textOnPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+                child: Icon(item.icon, color: Colors.white, size: 28),
+              ),
+              if (item.badge != null) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    item.badge!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                      fontFamily: 'Nunito',
                     ),
                   ),
-                ],
+                ),
               ],
+            ],
+          ),
+          const Spacer(),
+          Text(
+            item.label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              fontFamily: 'Nunito',
             ),
-            const Spacer(),
-            Text(
-              item.label,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-
-  void _showChildSwitcher(BuildContext context) {
-    context.go('/children');
   }
 
   void _startWorksheet(BuildContext context) {

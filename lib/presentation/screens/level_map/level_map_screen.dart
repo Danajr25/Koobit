@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/level_config.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/child_model.dart';
+import '../../widgets/cyber_widgets.dart';
 
 /// Level status for display
 enum LevelStatus {
@@ -60,28 +61,37 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
       appBar: AppBar(
         title: Text(l10n.levelMap),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
         actions: [
-          // Current level indicator
+          // Current level indicator pill
           Container(
             margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 10,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.school, size: 16, color: AppColors.primary),
-                const SizedBox(width: 4),
+                const Icon(Icons.school_rounded,
+                    size: 16, color: Colors.white),
+                const SizedBox(width: 5),
                 Text(
                   '${l10n.level} ${widget.child.currentLevel}',
                   style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Nunito',
                   ),
                 ),
               ],
@@ -89,16 +99,21 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: LevelConfiguration.phases.length,
-        itemBuilder: (context, index) {
-          final phase = LevelConfiguration.phases[index];
-          final isExpanded = _expandedPhase == phase.phaseNumber;
-          
-          return _buildPhaseCard(context, phase, isExpanded, languageCode, l10n);
-        },
+      body: Stack(
+        children: [
+          const Positioned.fill(child: CyberGridBackground()),
+          ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: LevelConfiguration.phases.length,
+            itemBuilder: (context, index) {
+              final phase = LevelConfiguration.phases[index];
+              final isExpanded = _expandedPhase == phase.phaseNumber;
+              return _buildPhaseCard(
+                  context, phase, isExpanded, languageCode, l10n);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -128,21 +143,21 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isExpanded 
-              ? phase.color.withValues(alpha: 0.5)
-              : Colors.transparent,
-          width: 2,
+          color: isExpanded
+              ? phase.color
+              : AppColors.border,
+          width: isExpanded ? 2.5 : 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: phase.color.withValues(alpha: isExpanded ? 0.18 : 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -160,25 +175,41 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // Phase icon/number
+                  // Phase number bubble (3D)
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                      color: isPhaseAccessible
-                          ? phase.color.withValues(alpha: 0.2)
-                          : AppColors.levelLocked.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: isPhaseAccessible
+                          ? LinearGradient(
+                              colors: [
+                                phase.color,
+                                Color.lerp(phase.color, Colors.white, 0.3)!,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isPhaseAccessible ? null : AppColors.levelLocked,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: isPhaseAccessible
+                          ? [
+                              BoxShadow(
+                                color: phase.color.withValues(alpha: 0.4),
+                                offset: const Offset(0, 5),
+                                blurRadius: 0,
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Center(
                       child: Text(
                         '${phase.phaseNumber}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: isPhaseAccessible
-                              ? phase.color
-                              : AppColors.textLight,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          fontFamily: 'Nunito',
                         ),
                       ),
                     ),
@@ -320,19 +351,30 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
     final isAccessible = status != LevelStatus.locked;
 
     return GestureDetector(
-      onTap: isAccessible 
-          ? () => _showLevelDetails(context, level, status, phaseColor, languageCode, l10n)
+      onTap: isAccessible
+          ? () => _showLevelDetails(
+              context, level, status, phaseColor, languageCode, l10n)
           : null,
       child: Container(
         decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
+          gradient: isAccessible
+              ? LinearGradient(
+                  colors: [
+                    backgroundColor,
+                    Color.lerp(backgroundColor, Colors.white, 0.25)!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isAccessible ? null : backgroundColor,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: isAccessible
               ? [
                   BoxShadow(
-                    color: backgroundColor.withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    color: backgroundColor.withValues(alpha: 0.45),
+                    offset: const Offset(0, 5),
+                    blurRadius: 0,
                   ),
                 ]
               : null,
@@ -340,16 +382,16 @@ class _LevelMapScreenState extends State<LevelMapScreen> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Level number or icon
             if (icon != null)
-              Icon(icon, color: iconColor, size: 24)
+              Icon(icon, color: iconColor, size: 26)
             else
               Text(
                 '${level.level}',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
                   color: iconColor,
+                  fontFamily: 'Nunito',
                 ),
               ),
 
@@ -536,27 +578,15 @@ class _LevelDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Action button
+          // Action button (bouncy 3D)
           if (status != LevelStatus.locked && onStart != null)
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: CyberButton(
+                text: l10n.startWorksheet,
+                icon: Icons.play_arrow_rounded,
+                color: phaseColor,
                 onPressed: onStart,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: phaseColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  l10n.startWorksheet,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ),
 

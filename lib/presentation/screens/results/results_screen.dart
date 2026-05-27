@@ -7,6 +7,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/child_model.dart';
 import '../../../data/models/question_model.dart';
 import '../../blocs/progress/progress.dart';
+import '../../widgets/cyber_widgets.dart';
 
 /// Results screen showing worksheet completion stats
 class ResultsScreen extends StatefulWidget {
@@ -153,9 +154,9 @@ class _ResultsScreenState extends State<ResultsScreen>
       child: PopScope(
         canPop: false,
         child: Scaffold(
-        backgroundColor: widget.passed 
-            ? const Color(0xFFE8F5E9) 
-            : const Color(0xFFFFF3E0),
+        backgroundColor: widget.passed
+            ? AppColors.correctHighlight
+            : AppColors.incorrectHighlight,
         body: SafeArea(
           child: Column(
             children: [
@@ -521,44 +522,38 @@ class _ResultsScreenState extends State<ResultsScreen>
         child: Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
+              child: CyberButton(
+                text: 'Home',
+                icon: Icons.home_rounded,
+                color: AppColors.surface,
+                textColor: AppColors.textPrimary,
                 onPressed: () {
-                  // Go back to home with updated child
                   context.go('/home', extra: childToUse);
                 },
-                icon: const Icon(Icons.home),
-                label: const Text('Home'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
-              child: ElevatedButton.icon(
+              child: CyberButton(
+                text: widget.passed ? 'Continue' : 'Do Corrections',
+                icon: widget.passed
+                    ? Icons.arrow_forward_rounded
+                    : Icons.edit_rounded,
+                color: widget.passed ? AppColors.success : AppColors.secondary,
                 onPressed: () {
                   if (widget.passed) {
-                    // Go to level map with updated child
                     context.go('/levels', extra: childToUse);
                   } else {
-                    // Get incorrect questions for corrections
                     final incorrectQuestions = widget.questions.where((q) {
                       return widget.results[q.questionNumber] != true;
                     }).toList();
-                    
-                    // Get original answers for incorrect questions
                     final originalAnswers = Map<int, String>.fromEntries(
                       incorrectQuestions.map((q) => MapEntry(
-                        q.questionNumber,
-                        widget.answers[q.questionNumber] ?? '',
-                      )),
+                            q.questionNumber,
+                            widget.answers[q.questionNumber] ?? '',
+                          )),
                     );
-                    
-                    // Navigate to corrections screen
                     context.push(
                       '/corrections',
                       extra: {
@@ -573,16 +568,6 @@ class _ResultsScreenState extends State<ResultsScreen>
                     );
                   }
                 },
-                icon: Icon(widget.passed ? Icons.arrow_forward : Icons.edit),
-                label: Text(widget.passed ? 'Continue' : 'Do Corrections'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.passed ? Colors.green : Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
             ),
           ],

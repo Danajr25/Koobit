@@ -79,18 +79,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
-                  // Icon
+                  // Icon sticker
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 96,
+                    height: 96,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          offset: const Offset(0, 6),
+                          blurRadius: 0,
+                        ),
+                      ],
                     ),
                     child: const Icon(
-                      Icons.lock_reset_outlined,
-                      size: 40,
-                      color: AppColors.primary,
+                      Icons.lock_reset_rounded,
+                      size: 52,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
