@@ -51,13 +51,13 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   bool _worksheetCompleted = false;
   // ignore: unused_field - reserved for analytics
   DateTime? _startTime;
-  bool _useHandwriting = false; // Default to keyboard (handwriting can be enabled)
+  final bool _useHandwriting = true; // Handwriting only — keyboard mode removed
   String _handwritingText = '';
   final Map<int, bool> _tracingCompleted = {};
   
   // Constants for worksheet structure
   static const int questionsPerPage = 10;
-  static const int totalPages = 10;
+  static const int totalPages = 5; // 5 pages × 10 = 50 questions per worksheet
 
   // Actual pages based on generated question count (may be fewer in debug mode)
   int get _actualTotalPages => (_questions.length / questionsPerPage).ceil().clamp(1, totalPages);
@@ -73,10 +73,8 @@ class _WorksheetScreenState extends State<WorksheetScreen>
       levelNumber: widget.levelNumber,
       worksheetId: _worksheetId,
       // Each page has `questionsPerPage` questions; total pages comes from the
-      // level config (defaults to 10). In debug mode we cap to keep tests fast.
-      count: kDebugMode
-          ? ((_levelConfig?.pages ?? 1) * 10).clamp(10, 30)
-          : (_levelConfig?.pages ?? totalPages) * questionsPerPage,
+      // level config (defaults to 5) → 5 × 10 = 50 questions per worksheet.
+      count: (_levelConfig?.pages ?? totalPages) * questionsPerPage,
     );
     
     _startTime = DateTime.now();
@@ -122,9 +120,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
       if (_canvasKey.currentState != null) {
         _canvasKey.currentState!.clear();
       }
-      if (!_useHandwriting) {
-        _answerFocusNode.requestFocus();
-      }
+      // Handwriting is always on; no keyboard focus needed.
     }
   }
 
@@ -466,9 +462,9 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   // Input area for selected question in grid view
   Widget _buildSelectedQuestionInput(QuestionModel question) {
     final isAnswered = _results[_currentQuestion] != null;
-    
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -481,81 +477,75 @@ class _WorksheetScreenState extends State<WorksheetScreen>
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Selected question indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              'Q${_currentQuestion + 1}: ${_displayQuestionText(question.questionText)}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          // Input row
+          // Selected question label
           Row(
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _answerController,
-                  focusNode: _answerFocusNode,
-                  enabled: !isAnswered,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _submitAnswer(),
-                  onChanged: (value) {
-                    _handwritingText = value;
-                  },
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Q${_currentQuestion + 1}',
                   style: const TextStyle(
-                    fontSize: 20,
+                    color: Colors.white,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: isAnswered ? 'Answered' : 'Enter answer',
-                    hintStyle: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 16,
-                      fontWeight: FontWeight.normal,
-                    ),
-                    filled: true,
-                    fillColor: isAnswered ? Colors.grey[100] : Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: isAnswered ? null : _submitAnswer,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _displayQuestionText(question.questionText),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: const Icon(Icons.check, size: 24),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          // Handwriting canvas (includes its own Clear + recognized text)
+          HandwritingCanvas(
+            key: _canvasKey,
+            height: 110,
+            enabled: !isAnswered,
+            recognizedText: _handwritingText,
+            onRecognized: (text) {
+              setState(() {
+                _handwritingText = text;
+                _answerController.text = text;
+              });
+            },
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: (isAnswered || _handwritingText.trim().isEmpty)
+                  ? null
+                  : _submitAnswer,
+              icon: const Icon(Icons.check, size: 20),
+              label: Text(isAnswered ? 'Answered' : 'Submit answer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[300],
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -1228,79 +1218,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Input mode toggle
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildInputModeButton(
-                icon: Icons.draw_outlined,
-                label: 'Write',
-                isSelected: _useHandwriting,
-                onTap: () => setState(() {
-                  _useHandwriting = true;
-                  _answerController.text = _handwritingText;
-                }),
-              ),
-              const SizedBox(width: 12),
-              _buildInputModeButton(
-                icon: Icons.keyboard_outlined,
-                label: 'Type',
-                isSelected: !_useHandwriting,
-                onTap: () => setState(() {
-                  _useHandwriting = false;
-                  _answerFocusNode.requestFocus();
-                }),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // Input area
-          if (_useHandwriting)
-            _buildHandwritingInput(isAnswered)
-          else
-            _buildKeyboardInput(isAnswered),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputModeButton({
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? Colors.white : Colors.grey[600],
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: _buildHandwritingInput(isAnswered),
     );
   }
 
@@ -1310,7 +1228,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
       children: [
         HandwritingCanvas(
           key: _canvasKey,
-          height: 120,
+          height: 130,
           enabled: !isAnswered,
           recognizedText: _handwritingText,
           onRecognized: (text) {
@@ -1320,86 +1238,25 @@ class _WorksheetScreenState extends State<WorksheetScreen>
             });
           },
         ),
-        const SizedBox(height: 8),
-        // Submit button
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: isAnswered || _handwritingText.isEmpty
+            onPressed: isAnswered || _handwritingText.trim().isEmpty
                 ? null
                 : _submitAnswer,
             icon: const Icon(Icons.check, size: 20),
-            label: const Text('Submit'),
+            label: Text(isAnswered ? 'Answered' : 'Submit answer'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey[300],
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildKeyboardInput(bool isAnswered) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _answerController,
-            focusNode: _answerFocusNode,
-            enabled: !isAnswered,
-            keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submitAnswer(),
-            onChanged: (value) {
-              // Sync with handwriting text
-              _handwritingText = value;
-            },
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              hintText: 'Enter your answer',
-              hintStyle: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 18,
-                fontWeight: FontWeight.normal,
-              ),
-              filled: true,
-              fillColor: isAnswered ? Colors.grey[100] : Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        ElevatedButton(
-          onPressed: isAnswered ? null : _submitAnswer,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: const Icon(Icons.check, size: 28),
         ),
       ],
     );

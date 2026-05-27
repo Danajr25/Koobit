@@ -10,7 +10,7 @@ import '../../../data/models/worksheet_model.dart';
 import '../../../data/repositories/worksheet_repository.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Performance screen showing statistics and charts - Cyber Theme
+/// Performance screen showing statistics and charts.
 class PerformanceScreen extends StatefulWidget {
   final ChildModel child;
 

@@ -39,7 +39,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
   
   int _currentIndex = 0;
   bool _allCorrected = false;
-  bool _useHandwriting = false; // Default to keyboard
+  // Handwriting only — keyboard input removed
   String _handwritingText = '';
 
   @override
@@ -102,9 +102,6 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         });
         // Clear canvas
         _canvasKey.currentState?.clear();
-        if (!_useHandwriting) {
-          _answerFocusNode.requestFocus();
-        }
         return;
       }
     }
@@ -125,9 +122,6 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
     });
     // Clear canvas for new question
     _canvasKey.currentState?.clear();
-    if (!_useHandwriting) {
-      _answerFocusNode.requestFocus();
-    }
   }
 
   int get _correctedCount => 
@@ -393,74 +387,7 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Input mode toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildInputModeButton(
-                  icon: Icons.draw_outlined,
-                  label: 'Write',
-                  isSelected: _useHandwriting,
-                  onTap: () => setState(() {
-                    _useHandwriting = true;
-                    _answerController.text = _handwritingText;
-                  }),
-                ),
-                const SizedBox(width: 12),
-                _buildInputModeButton(
-                  icon: Icons.keyboard_outlined,
-                  label: 'Type',
-                  isSelected: !_useHandwriting,
-                  onTap: () => setState(() {
-                    _useHandwriting = false;
-                    _answerFocusNode.requestFocus();
-                  }),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Input area
-            if (_useHandwriting)
-              _buildHandwritingInput(isCorrect)
-            else
-              _buildKeyboardInput(isCorrect),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputModeButton({
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.orange : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? Colors.white : Colors.grey[600],
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.grey[600],
-              ),
-            ),
+            _buildHandwritingInput(isCorrect),
           ],
         ),
       ),
@@ -520,73 +447,6 @@ class _CorrectionsScreenState extends State<CorrectionsScreen> {
               ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildKeyboardInput(bool isCorrect) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _answerController,
-            focusNode: _answerFocusNode,
-            keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.done,
-            enabled: !isCorrect,
-            onSubmitted: (_) => _submitCorrection(),
-            onChanged: (value) {
-              _handwritingText = value;
-            },
-            decoration: InputDecoration(
-              hintText: isCorrect ? 'Correct!' : 'Enter your answer',
-              filled: true,
-              fillColor: isCorrect 
-                  ? Colors.green.withValues(alpha: 0.1) 
-                  : Colors.grey[100],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              prefixIcon: isCorrect 
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        if (isCorrect)
-          ElevatedButton(
-            onPressed: _moveToNextUncorrected,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Next'),
-          )
-        else
-          ElevatedButton(
-            onPressed: _submitCorrection,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Check'),
-          ),
       ],
     );
   }

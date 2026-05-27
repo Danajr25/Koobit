@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
-/// A HUD-style frame with tech corners and optional glow effect
+/// ─── Cartoony Kids Widget Library ─────────────────────────────────────────
+///
+/// All class names are retained from the prior cyber-themed library so that
+/// the rest of the app swaps in transparently. The styling has been
+/// completely reimagined: light surfaces, chunky rounded corners, soft
+/// drop shadows, playful 3D bottom-shadow "pressable" buttons.
+/// ─────────────────────────────────────────────────────────────────────────
+
+/// A friendly framed card with thick rounded border. Drop-in for `CyberFrame`.
 class CyberFrame extends StatelessWidget {
   final Widget child;
   final Color borderColor;
@@ -17,9 +25,9 @@ class CyberFrame extends StatelessWidget {
     required this.child,
     this.borderColor = AppColors.primary,
     this.glowColor,
-    this.borderWidth = 1.5,
-    this.cornerSize = 12,
-    this.padding = const EdgeInsets.all(16),
+    this.borderWidth = 2.5,
+    this.cornerSize = 24,
+    this.padding = const EdgeInsets.all(20),
     this.showGlow = true,
   });
 
@@ -28,105 +36,24 @@ class CyberFrame extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: borderColor.withValues(alpha: 0.5),
-          width: borderWidth,
-        ),
+        borderRadius: BorderRadius.circular(cornerSize),
+        border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: showGlow
             ? [
                 BoxShadow(
-                  color: (glowColor ?? borderColor).withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  spreadRadius: 1,
+                  color: (glowColor ?? borderColor).withValues(alpha: 0.18),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ]
             : null,
       ),
-      child: CustomPaint(
-        painter: _CyberFramePainter(
-          borderColor: borderColor,
-          cornerSize: cornerSize,
-        ),
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
-      ),
+      child: Padding(padding: padding, child: child),
     );
   }
 }
 
-class _CyberFramePainter extends CustomPainter {
-  final Color borderColor;
-  final double cornerSize;
-
-  _CyberFramePainter({
-    required this.borderColor,
-    required this.cornerSize,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Top-left corner
-    canvas.drawLine(
-      const Offset(0, 0),
-      Offset(cornerSize, 0),
-      paint,
-    );
-    canvas.drawLine(
-      const Offset(0, 0),
-      Offset(0, cornerSize),
-      paint,
-    );
-
-    // Top-right corner
-    canvas.drawLine(
-      Offset(size.width, 0),
-      Offset(size.width - cornerSize, 0),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(size.width, 0),
-      Offset(size.width, cornerSize),
-      paint,
-    );
-
-    // Bottom-left corner
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(cornerSize, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(0, size.height - cornerSize),
-      paint,
-    );
-
-    // Bottom-right corner
-    canvas.drawLine(
-      Offset(size.width, size.height),
-      Offset(size.width - cornerSize, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(size.width, size.height),
-      Offset(size.width, size.height - cornerSize),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// A card with glowing border effect
+/// A soft "sticker" card with offset drop shadow. Drop-in for `GlowCard`.
 class GlowCard extends StatelessWidget {
   final Widget child;
   final Color glowColor;
@@ -140,10 +67,10 @@ class GlowCard extends StatelessWidget {
     super.key,
     required this.child,
     this.glowColor = AppColors.primary,
-    this.glowIntensity = 0.4,
-    this.padding = const EdgeInsets.all(16),
+    this.glowIntensity = 0.18,
+    this.padding = const EdgeInsets.all(20),
     this.margin,
-    this.borderRadius = 12,
+    this.borderRadius = 24,
     this.onTap,
   });
 
@@ -154,15 +81,12 @@ class GlowCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: glowColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: glowColor.withValues(alpha: glowIntensity),
-            blurRadius: 15,
-            spreadRadius: -2,
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -171,18 +95,18 @@ class GlowCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(borderRadius),
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          splashColor: glowColor.withValues(alpha: 0.12),
+          highlightColor: glowColor.withValues(alpha: 0.06),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );
   }
 }
 
-/// A cyber-styled button with neon glow
-class CyberButton extends StatelessWidget {
+/// A bouncy, 3D-feeling action button with a thick bottom shadow.
+/// Drop-in for `CyberButton`.
+class CyberButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final Color color;
@@ -199,67 +123,87 @@ class CyberButton extends StatelessWidget {
     this.color = AppColors.primary,
     this.textColor = AppColors.textOnPrimary,
     this.icon,
-    this.height = 52,
+    this.height = 56,
     this.isLoading = false,
     this.outlined = false,
   });
 
   @override
+  State<CyberButton> createState() => _CyberButtonState();
+}
+
+class _CyberButtonState extends State<CyberButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: onPressed != null
-            ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: outlined ? Colors.transparent : color,
-          foregroundColor: outlined ? color : textColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: outlined
-                ? BorderSide(color: color, width: 1.5)
-                : BorderSide.none,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+    final enabled = widget.onPressed != null && !widget.isLoading;
+    final bg = widget.outlined ? AppColors.surface : widget.color;
+    final fg = widget.outlined ? widget.color : widget.textColor;
+    final shadowColor = _darken(widget.color, 0.18);
+
+    return GestureDetector(
+      onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
+      onTap: enabled ? widget.onPressed : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOut,
+        height: widget.height,
+        transform: Matrix4.translationValues(0, _pressed ? 4 : 0, 0),
+        decoration: BoxDecoration(
+          color: enabled ? bg : AppColors.border,
+          borderRadius: BorderRadius.circular(22),
+          border: widget.outlined
+              ? Border.all(color: widget.color, width: 2.5)
+              : null,
+          boxShadow: enabled && !widget.outlined
+              ? [
+                  BoxShadow(
+                    color: shadowColor,
+                    offset: Offset(0, _pressed ? 0 : 5),
+                    blurRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: widget.color.withValues(alpha: 0.25),
+                    offset: const Offset(0, 8),
+                    blurRadius: 18,
+                  ),
+                ]
+              : null,
         ),
-        child: isLoading
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: widget.isLoading
             ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    outlined ? color : textColor,
-                  ),
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(fg),
                 ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
+                  if (widget.icon != null) ...[
+                    Icon(widget.icon, size: 22, color: fg),
+                    const SizedBox(width: 10),
                   ],
-                  Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                  Flexible(
+                    child: Text(
+                      widget.text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: fg,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                        fontFamily: 'Nunito',
+                      ),
                     ),
                   ),
                 ],
@@ -267,9 +211,16 @@ class CyberButton extends StatelessWidget {
       ),
     );
   }
+
+  Color _darken(Color c, double amount) {
+    final hsl = HSLColor.fromColor(c);
+    return hsl
+        .withLightness((hsl.lightness - amount).clamp(0.0, 1.0))
+        .toColor();
+  }
 }
 
-/// A cyber-styled text field
+/// A friendly pill-shaped text field. Drop-in for `CyberTextField`.
 class CyberTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? labelText;
@@ -307,15 +258,20 @@ class CyberTextField extends StatelessWidget {
       style: const TextStyle(
         color: AppColors.textPrimary,
         fontSize: 16,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'Nunito',
       ),
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        labelStyle: TextStyle(
+        labelStyle: const TextStyle(
           color: AppColors.textSecondary,
+          fontFamily: 'Nunito',
+          fontWeight: FontWeight.w600,
         ),
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           color: AppColors.textLight,
+          fontFamily: 'Nunito',
         ),
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, color: accentColor)
@@ -323,48 +279,35 @@ class CyberTextField extends StatelessWidget {
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppColors.border,
-          ),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: AppColors.border,
-          ),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: accentColor,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: accentColor, width: 2.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-          ),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-            width: 2,
-          ),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.error, width: 2.5),
         ),
       ),
     );
   }
 }
 
-/// A pulsing glow animation wrapper
+/// A gentle breathing/bobbing wrapper (re-themed from glow pulse).
+/// Drop-in for `PulsingGlow`.
 class PulsingGlow extends StatefulWidget {
   final Widget child;
   final Color glowColor;
@@ -374,7 +317,7 @@ class PulsingGlow extends StatefulWidget {
     super.key,
     required this.child,
     this.glowColor = AppColors.primary,
-    this.duration = const Duration(seconds: 2),
+    this.duration = const Duration(milliseconds: 1800),
   });
 
   @override
@@ -384,17 +327,14 @@ class PulsingGlow extends StatefulWidget {
 class _PulsingGlowState extends State<PulsingGlow>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _animation;
+  late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _animation = Tween<double>(begin: 0.2, end: 0.6).animate(
+    _controller = AnimationController(duration: widget.duration, vsync: this)
+      ..repeat(reverse: true);
+    _scale = Tween<double>(begin: 1.0, end: 1.04).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -408,26 +348,17 @@ class _PulsingGlowState extends State<PulsingGlow>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _animation,
+      animation: _scale,
       builder: (context, child) {
-        return Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: widget.glowColor.withValues(alpha: _animation.value),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: widget.child,
-        );
+        return Transform.scale(scale: _scale.value, child: child);
       },
+      child: widget.child,
     );
   }
 }
 
-/// A scanning line animation for cyber effect
+/// A floating bubble decoration that drifts across the screen.
+/// (Replaces the old scanning-line. Same name.)
 class ScanningLine extends StatefulWidget {
   final double height;
   final Color color;
@@ -435,9 +366,9 @@ class ScanningLine extends StatefulWidget {
 
   const ScanningLine({
     super.key,
-    this.height = 2,
+    this.height = 24,
     this.color = AppColors.primary,
-    this.duration = const Duration(seconds: 3),
+    this.duration = const Duration(seconds: 6),
   });
 
   @override
@@ -451,10 +382,8 @@ class _ScanningLineState extends State<ScanningLine>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    )..repeat();
+    _controller = AnimationController(duration: widget.duration, vsync: this)
+      ..repeat();
   }
 
   @override
@@ -468,27 +397,20 @@ class _ScanningLineState extends State<ScanningLine>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        final t = _controller.value;
         return Positioned(
-          top: _controller.value * MediaQuery.of(context).size.height,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: widget.height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  widget.color.withValues(alpha: 0),
-                  widget.color.withValues(alpha: 0.8),
-                  widget.color.withValues(alpha: 0),
-                ],
+          top: MediaQuery.of(context).size.height * (1 - t),
+          left: MediaQuery.of(context).size.width *
+              (0.1 + 0.8 * ((t * 3) % 1.0)),
+          child: Opacity(
+            opacity: (1 - t).clamp(0.0, 0.6),
+            child: Container(
+              width: widget.height,
+              height: widget.height,
+              decoration: BoxDecoration(
+                color: widget.color.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.color.withValues(alpha: 0.5),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
             ),
           ),
         );
@@ -497,7 +419,7 @@ class _ScanningLineState extends State<ScanningLine>
   }
 }
 
-/// Grid background pattern for cyber effect
+/// A soft polka-dot/cloud-pattern background. Drop-in for `CyberGridBackground`.
 class CyberGridBackground extends StatelessWidget {
   final Color gridColor;
   final double gridSpacing;
@@ -505,54 +427,36 @@ class CyberGridBackground extends StatelessWidget {
 
   const CyberGridBackground({
     super.key,
-    this.gridColor = AppColors.border,
-    this.gridSpacing = 30,
+    this.gridColor = AppColors.primary,
+    this.gridSpacing = 40,
     this.child,
   });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _GridPainter(
-        gridColor: gridColor,
-        gridSpacing: gridSpacing,
+      painter: _DotsPainter(
+        dotColor: gridColor,
+        spacing: gridSpacing,
       ),
       child: child,
     );
   }
 }
 
-class _GridPainter extends CustomPainter {
-  final Color gridColor;
-  final double gridSpacing;
+class _DotsPainter extends CustomPainter {
+  final Color dotColor;
+  final double spacing;
 
-  _GridPainter({
-    required this.gridColor,
-    required this.gridSpacing,
-  });
+  _DotsPainter({required this.dotColor, required this.spacing});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = gridColor.withValues(alpha: 0.1)
-      ..strokeWidth = 0.5;
-
-    // Vertical lines
-    for (double x = 0; x < size.width; x += gridSpacing) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-
-    // Horizontal lines
-    for (double y = 0; y < size.height; y += gridSpacing) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
+    final paint = Paint()..color = dotColor.withValues(alpha: 0.08);
+    for (double y = spacing / 2; y < size.height; y += spacing) {
+      for (double x = spacing / 2; x < size.width; x += spacing) {
+        canvas.drawCircle(Offset(x, y), 2.5, paint);
+      }
     }
   }
 
@@ -560,7 +464,7 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// A circular progress indicator with cyber styling
+/// A chunky rounded progress ring. Drop-in for `CyberProgress`.
 class CyberProgress extends StatelessWidget {
   final double value;
   final double size;
@@ -575,25 +479,15 @@ class CyberProgress extends StatelessWidget {
     this.size = 100,
     this.color = AppColors.primary,
     this.backgroundColor = AppColors.border,
-    this.strokeWidth = 8,
+    this.strokeWidth = 10,
     this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 15,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -603,6 +497,7 @@ class CyberProgress extends StatelessWidget {
             child: CircularProgressIndicator(
               value: value,
               strokeWidth: strokeWidth,
+              strokeCap: StrokeCap.round,
               backgroundColor: backgroundColor,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
@@ -614,7 +509,7 @@ class CyberProgress extends StatelessWidget {
   }
 }
 
-/// A stat card with cyber styling
+/// A friendly stat card with a colored icon bubble. Drop-in for `CyberStatCard`.
 class CyberStatCard extends StatelessWidget {
   final String value;
   final String label;
@@ -633,41 +528,40 @@ class CyberStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlowCard(
       glowColor: color,
-      glowIntensity: 0.2,
+      glowIntensity: 0.12,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 26),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
+                    fontFamily: 'Nunito',
                   ),
                 ),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: const TextStyle(
+                    fontSize: 13,
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Nunito',
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

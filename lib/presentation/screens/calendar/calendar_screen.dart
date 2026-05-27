@@ -9,7 +9,7 @@ import '../../../data/models/worksheet_model.dart';
 import '../../../data/repositories/worksheet_repository.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Calendar screen showing worksheet history - Cyber Theme
+/// Calendar screen showing worksheet history.
 class CalendarScreen extends StatefulWidget {
   final ChildModel child;
 

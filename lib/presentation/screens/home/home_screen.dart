@@ -6,7 +6,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/child_model.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Home screen showing child's dashboard - Cyber Theme
+/// Home screen showing child's dashboard.
 class HomeScreen extends StatelessWidget {
   final ChildModel child;
 

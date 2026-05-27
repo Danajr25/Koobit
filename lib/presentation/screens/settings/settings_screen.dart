@@ -12,7 +12,7 @@ import '../../../data/repositories/auth_repository.dart';
 import '../../blocs/auth/auth.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Settings screen for app configuration - Cyber Theme
+/// Settings screen for app configuration.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 

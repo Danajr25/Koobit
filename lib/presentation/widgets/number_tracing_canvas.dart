@@ -241,7 +241,62 @@ class NumberTracingCanvasState extends State<NumberTracingCanvas> {
         }
     }
 
-    return points;
+    // Fit the generated stroke into the actual rendered glyph rectangle so
+    // the START / END dots and guide points align with the visible numeral.
+    final glyphRect = _computeGlyphRect(size, number);
+    return _fitPointsToRect(points, glyphRect);
+  }
+
+  /// Bounding rect of the rendered numeral (must match the TextPainter used
+  /// by [_NumberTracingPainter]).
+  Rect _computeGlyphRect(Size size, int number) {
+    final numText = number == 10 ? '10' : '$number';
+    final fontSize = size.height * 0.85;
+    final tp = TextPainter(
+      text: TextSpan(
+        text: numText,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w900,
+          height: 1.0,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    )..layout();
+    return Rect.fromLTWH(
+      (size.width - tp.width) / 2,
+      (size.height - tp.height) / 2,
+      tp.width,
+      tp.height,
+    );
+  }
+
+  /// Affine-map [pts] (using their own bounding box) onto [target] with a
+  /// small inset so dots sit inside the glyph rather than on the edge.
+  List<Offset> _fitPointsToRect(List<Offset> pts, Rect target) {
+    if (pts.isEmpty) return pts;
+    double minX = pts.first.dx, maxX = pts.first.dx;
+    double minY = pts.first.dy, maxY = pts.first.dy;
+    for (final p in pts) {
+      if (p.dx < minX) minX = p.dx;
+      if (p.dx > maxX) maxX = p.dx;
+      if (p.dy < minY) minY = p.dy;
+      if (p.dy > maxY) maxY = p.dy;
+    }
+    final srcW = (maxX - minX).abs() < 1e-3 ? 1.0 : (maxX - minX);
+    final srcH = (maxY - minY).abs() < 1e-3 ? 1.0 : (maxY - minY);
+    // Slight inset so dots are not flush with glyph edge.
+    final inset = target.shortestSide * 0.04;
+    final dst = target.deflate(inset);
+    final sx = dst.width / srcW;
+    final sy = dst.height / srcH;
+    return [
+      for (final p in pts)
+        Offset(
+          dst.left + (p.dx - minX) * sx,
+          dst.top + (p.dy - minY) * sy,
+        ),
+    ];
   }
 
   void _onPanStart(DragStartDetails details) {
@@ -290,11 +345,11 @@ class NumberTracingCanvasState extends State<NumberTracingCanvas> {
   }
 
   void _checkCompletion() {
-    if (_guidePoints.isEmpty || _userPoints.length < 10) return;
+    if (_guidePoints.isEmpty || _userPoints.length < 30) return;
     if (!_startedCorrectly) return;
 
     int coveredPoints = 0;
-    const threshold = 35.0; // Increased tolerance for easier completion
+    const threshold = 22.0; // tighter tolerance so partial scribbles don't pass
 
     for (final guidePoint in _guidePoints) {
       for (final userPoint in _userPoints) {
@@ -307,21 +362,33 @@ class NumberTracingCanvasState extends State<NumberTracingCanvas> {
 
     _accuracy = coveredPoints / _guidePoints.length;
 
-    // Check if user reached the END dot
+    // Total length of the user's stroke (must be comparable to the guide path).
+    double userLen = 0;
+    for (int i = 1; i < _userPoints.length; i++) {
+      userLen += (_userPoints[i] - _userPoints[i - 1]).distance;
+    }
+    double guideLen = 0;
+    for (int i = 1; i < _guidePoints.length; i++) {
+      guideLen += (_guidePoints[i] - _guidePoints[i - 1]).distance;
+    }
+    final lengthOk = guideLen <= 0 || userLen >= guideLen * 0.7;
+
+    // Check if user reached the END dot near the end of their stroke.
     bool reachedEnd = false;
     if (_userPoints.isNotEmpty && _guidePoints.isNotEmpty) {
       final endPoint = _guidePoints.last;
-      // Check if any of the last 20 user points are near the END
-      for (int i = _userPoints.length - 1; i >= 0 && i >= _userPoints.length - 20; i--) {
-        if ((endPoint - _userPoints[i]).distance < 45) {
+      for (int i = _userPoints.length - 1;
+          i >= 0 && i >= _userPoints.length - 15;
+          i--) {
+        if ((endPoint - _userPoints[i]).distance < 30) {
           reachedEnd = true;
           break;
         }
       }
     }
 
-    // Numbers need 85% coverage AND must reach end
-    if (_accuracy >= 0.85 && reachedEnd && !_isComplete) {
+    // Require coverage AND end-dot reach AND adequate stroke length.
+    if (_accuracy >= 0.80 && reachedEnd && lengthOk && !_isComplete) {
       setState(() {
         _isComplete = true;
       });

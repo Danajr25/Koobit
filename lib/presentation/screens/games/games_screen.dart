@@ -32,7 +32,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       title: 'Flappy Math Bird',
       subtitle: 'Tap to flap, dodge pipes and answer for bonus points',
       icon: Icons.flutter_dash_rounded,
-      color: Color(0xFF00D4FF),
+      color: Color(0xFF38C7E5),
       route: AppRoutes.arcadeFlappy,
     ),
     _ArcadeGameDef(
@@ -40,7 +40,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       title: 'Balloon Pop',
       subtitle: 'Pop the balloon showing the correct answer before it escapes',
       icon: Icons.bubble_chart_rounded,
-      color: Color(0xFFBF5AF2),
+      color: Color(0xFFE56DD3),
       route: AppRoutes.arcadeBalloon,
     ),
     _ArcadeGameDef(
@@ -48,7 +48,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       title: 'Math Runner',
       subtitle: 'Run, jump and slide – pick the right answer to score',
       icon: Icons.directions_run_rounded,
-      color: Color(0xFFFF9500),
+      color: Color(0xFFFF8A3D),
       route: AppRoutes.arcadeRunner,
     ),
   ];

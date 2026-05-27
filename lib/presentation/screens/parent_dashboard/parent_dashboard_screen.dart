@@ -13,7 +13,7 @@ import '../../../data/repositories/worksheet_repository.dart';
 import '../../blocs/auth/auth.dart';
 import '../../widgets/cyber_widgets.dart';
 
-/// Parent Dashboard screen for monitoring children's progress - Cyber Theme
+/// Parent Dashboard screen for monitoring children's progress.
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
 
