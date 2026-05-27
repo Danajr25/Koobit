@@ -100,6 +100,33 @@ class _FlappyMathScreenState extends State<FlappyMathScreen> {
                     )),
                   ),
                   const Spacer(),
+                  // Streak badge (only when 2+)
+                  if (_game.streak >= 2)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF9500), Color(0xFFFF3B5C)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded,
+                              color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_game.streak}x',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
                   // Score pill
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -390,6 +417,7 @@ class _QuestionCard extends StatelessWidget {
 class FlappyMathGame extends FlameGame {
   // ── public state (read by Flutter widget) ────────────────────────────────
   int score = 0;
+  int streak = 0; // consecutive correct answers (resets on wrong/hit)
   int lives = 3;
   bool isGameOver = false;
   bool isStarted = false;
@@ -446,11 +474,17 @@ class FlappyMathGame extends FlameGame {
     if (currentQuestion == null || questionAnswered) return;
     questionAnswered = true;
     if (answer == currentQuestion!.correctAnswer) {
-      score += 5;
+      streak++;
+      // Streak multiplier: +5, +7, +10, +15, +20...
+      final bonus = 5 + (streak - 1) * 2 + (streak >= 3 ? 3 : 0);
+      score += bonus;
       _bird.flap(); // bonus flap
-      feedbackText = '+5 Correct!';
+      feedbackText = streak >= 2
+          ? '+$bonus  ${streak}x streak!'
+          : '+$bonus Correct!';
       feedbackCorrect = true;
     } else {
+      streak = 0;
       feedbackText = 'Wrong! -1 life';
       feedbackCorrect = false;
       _applyHit();
@@ -563,6 +597,7 @@ class FlappyMathGame extends FlameGame {
   void _applyHit() {
     if (isGameOver || _hitCooldown > 0) return;
     _hitCooldown = _hitCooldownDuration;
+    streak = 0; // hits break the streak
     lives--;
     if (lives <= 0) {
       lives = 0;

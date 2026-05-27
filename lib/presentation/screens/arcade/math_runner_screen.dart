@@ -96,6 +96,32 @@ class _MathRunnerScreenState extends State<MathRunnerScreen> {
                     ),
                   ),
                   const Spacer(),
+                  if (_game.streak >= 2)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF9500), Color(0xFFFF3B5C)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded,
+                              color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_game.streak}x',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 7),
@@ -391,6 +417,7 @@ class _InstructionRow extends StatelessWidget {
 class MathRunnerGame extends FlameGame {
   // ── public state ──────────────────────────────────────────────────────────
   int score = 0;
+  int streak = 0;
   int lives = 3;
   bool isGameOver = false;
   bool isStarted = false;
@@ -492,9 +519,11 @@ class MathRunnerGame extends FlameGame {
   void _onCorrectObstacle() {
     if (_obstacleHandled) return;
     _obstacleHandled = true;
-    score++;
+    streak++;
+    final bonus = 1 + (streak >= 3 ? 1 : 0) + (streak >= 5 ? 1 : 0) + (streak >= 8 ? 2 : 0);
+    score += bonus;
     _obstacleSpeed = (_obstacleSpeed + 4).clamp(180.0, 360.0);
-    feedbackText = 'Correct! +1';
+    feedbackText = streak >= 2 ? '+$bonus  ${streak}x streak!' : 'Correct! +$bonus';
     feedbackCorrect = true;
     _feedbackTimer = 0.8;
     _runner.cheer();
@@ -508,6 +537,7 @@ class MathRunnerGame extends FlameGame {
   void _onWrongObstacle() {
     if (_obstacleHandled) return;
     _obstacleHandled = true;
+    streak = 0;
     lives--;
     feedbackText = lives > 0 ? 'Oops! -1 life' : 'Game Over!';
     feedbackCorrect = false;

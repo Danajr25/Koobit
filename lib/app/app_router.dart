@@ -25,7 +25,6 @@ import '../presentation/screens/arcade/flappy_math_screen.dart';
 import '../presentation/screens/arcade/balloon_pop_screen.dart';
 import '../presentation/screens/arcade/math_runner_screen.dart';
 import '../data/models/question_model.dart';
-import '../core/constants/game_routes.dart';
 
 /// App route names
 class AppRoutes {
@@ -249,26 +248,6 @@ class AppRouter {
               return const _PlaceholderScreen(title: 'No Child Selected');
             }
             return GamesHubScreen(child: child);
-          },
-        ),
-        GoRoute(
-          path: GameRoutes.play,
-          builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              return const _PlaceholderScreen(title: 'No Game Data');
-            }
-            final child = extra['child'] as ChildModel?;
-            final gameKey = extra['gameKey'] as String?;
-            final level = extra['level'] as int? ?? 1;
-            if (child == null || gameKey == null) {
-              return const _PlaceholderScreen(title: 'Invalid Game Data');
-            }
-            return GamePlayScreen(
-              child: child,
-              gameKey: gameKey,
-              initialLevel: level,
-            );
           },
         ),
         GoRoute(

@@ -95,6 +95,32 @@ class _BalloonPopScreenState extends State<BalloonPopScreen> {
                     ),
                   ),
                   const Spacer(),
+                  if (_game.streak >= 2)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF9500), Color(0xFFFF3B5C)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded,
+                              color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_game.streak}x',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 7),
@@ -360,6 +386,7 @@ class _BalloonPopScreenState extends State<BalloonPopScreen> {
 class BalloonPopGame extends FlameGame {
   // ── public state ──────────────────────────────────────────────────────────
   int score = 0;
+  int streak = 0;
   int lives = 3;
   bool isGameOver = false;
   bool isStarted = false;
@@ -456,9 +483,11 @@ class BalloonPopGame extends FlameGame {
   void _onCorrectTap() {
     if (_questionAnswered || isGameOver) return;
     _questionAnswered = true;
-    score++;
+    streak++;
+    final bonus = 1 + (streak >= 3 ? 1 : 0) + (streak >= 5 ? 1 : 0) + (streak >= 8 ? 2 : 0);
+    score += bonus;
     _baseSpeed = (_baseSpeed + 3).clamp(80.0, 260.0);
-    feedbackText = 'Correct! +1';
+    feedbackText = streak >= 2 ? '+$bonus  ${streak}x streak!' : 'Correct! +$bonus';
     feedbackCorrect = true;
     _feedbackTimer = 0.8;
     _removeBalloons();
@@ -468,6 +497,7 @@ class BalloonPopGame extends FlameGame {
 
   void _onWrongTap(_BalloonComponent balloon) {
     if (_questionAnswered || isGameOver) return;
+    streak = 0;
     lives--;
     feedbackText = 'Wrong! -1 life';
     feedbackCorrect = false;
@@ -483,6 +513,7 @@ class BalloonPopGame extends FlameGame {
   void _onCorrectEscape() {
     if (_questionAnswered || isGameOver) return;
     _questionAnswered = true;
+    streak = 0;
     lives--;
     feedbackText = 'Too slow! -1 life';
     feedbackCorrect = false;
