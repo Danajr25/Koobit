@@ -24,6 +24,9 @@ import '../presentation/screens/arcade/arcade_hub_screen.dart';
 import '../presentation/screens/arcade/flappy_math_screen.dart';
 import '../presentation/screens/arcade/balloon_pop_screen.dart';
 import '../presentation/screens/arcade/math_runner_screen.dart';
+import '../presentation/screens/arcade/animal_rescue_screen.dart';
+import '../presentation/screens/arcade/cannon_aim_screen.dart';
+import '../presentation/screens/arcade/snowball_fight_screen.dart';
 import '../data/models/question_model.dart';
 
 /// App route names
@@ -50,6 +53,9 @@ class AppRoutes {
   static const String arcadeFlappy = '/arcade/flappy';
   static const String arcadeBalloon = '/arcade/balloon';
   static const String arcadeRunner = '/arcade/runner';
+  static const String arcadeAnimalRescue = '/arcade/animal-rescue';
+  static const String arcadeCannonAim = '/arcade/cannon-aim';
+  static const String arcadeSnowball = '/arcade/snowball';
 }
 
 /// App router configuration
@@ -300,6 +306,36 @@ class AppRouter {
               return const _PlaceholderScreen(title: 'No Child Selected');
             }
             return MathRunnerScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeAnimalRescue,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return AnimalRescueScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeCannonAim,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return CannonAimScreen(child: child);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.arcadeSnowball,
+          builder: (context, state) {
+            final child = state.extra as ChildModel?;
+            if (child == null) {
+              return const _PlaceholderScreen(title: 'No Child Selected');
+            }
+            return SnowballFightScreen(child: child);
           },
         ),
       ],

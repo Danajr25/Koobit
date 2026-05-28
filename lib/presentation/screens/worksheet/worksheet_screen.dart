@@ -317,24 +317,36 @@ class _WorksheetScreenState extends State<WorksheetScreen>
             ),
           ),
 
-        // Grid of questions (5×2)
+        // Grid of questions (or vertical list of sequence rows)
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.6,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: pageQuestions.length,
-              itemBuilder: (context, localIndex) {
-                final globalIndex = _getGlobalIndex(localIndex);
-                final q = pageQuestions[localIndex];
-                return _buildQuestionCard(q, globalIndex, localIndex);
-              },
-            ),
+            child: _isSequenceLevel
+                ? ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: pageQuestions.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, localIndex) {
+                      final globalIndex = _getGlobalIndex(localIndex);
+                      final q = pageQuestions[localIndex];
+                      return _buildSequenceRow(q, globalIndex);
+                    },
+                  )
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1.6,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
+                    itemCount: pageQuestions.length,
+                    itemBuilder: (context, localIndex) {
+                      final globalIndex = _getGlobalIndex(localIndex);
+                      final q = pageQuestions[localIndex];
+                      return _buildQuestionCard(q, globalIndex, localIndex);
+                    },
+                  ),
           ),
         ),
         
@@ -419,29 +431,38 @@ class _WorksheetScreenState extends State<WorksheetScreen>
                   ),
               ],
             ),
-            // Question text
+            // Question text (or boxed sequence prompt)
             Expanded(
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    _displayQuestionText(question.questionText),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isAnswered
-                          ? (isCorrect ? Colors.green[800] : Colors.red[800])
-                          : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: question.questionText.startsWith('AFTER:')
+                      ? _buildSequenceBoxes(
+                          question.questionText.substring(6),
+                          _answers[globalIndex],
+                          isAnswered,
+                          isCorrect,
+                        )
+                      : Text(
+                          _displayQuestionText(question.questionText),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isAnswered
+                                ? (isCorrect
+                                    ? Colors.green[800]
+                                    : Colors.red[800])
+                                : Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                 ),
               ),
             ),
-            // Answer if answered
-            if (isAnswered)
+            // Answer if answered (skip for sequence boxes - already shown inside)
+            if (isAnswered && !question.questionText.startsWith('AFTER:'))
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Text(
@@ -514,20 +535,22 @@ class _WorksheetScreenState extends State<WorksheetScreen>
             ],
           ),
           const SizedBox(height: 10),
-          // Handwriting canvas (includes its own Clear + recognized text)
-          HandwritingCanvas(
-            key: _canvasKey,
-            height: 110,
-            enabled: !isAnswered,
-            recognizedText: _handwritingText,
-            onRecognized: (text) {
-              setState(() {
-                _handwritingText = text;
-                _answerController.text = text;
-              });
-            },
-          ),
-          const SizedBox(height: 8),
+          // Handwriting canvas (skipped on sequence levels - canvas is inline
+          // inside the selected row's answer box).
+          if (!_isSequenceLevel)
+            HandwritingCanvas(
+              key: _canvasKey,
+              height: 110,
+              enabled: !isAnswered,
+              recognizedText: _handwritingText,
+              onRecognized: (text) {
+                setState(() {
+                  _handwritingText = text;
+                  _answerController.text = text;
+                });
+              },
+            ),
+          if (!_isSequenceLevel) const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -741,6 +764,10 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   bool get _isTracingLevel {
     return widget.levelNumber <= 3 || widget.levelNumber == 5 || widget.levelNumber == 7;
   }
+
+  /// Sequence level: each question is "What comes after N?" rendered as
+  /// a vertical list of [N] → [answer box] rows with inline handwriting.
+  bool get _isSequenceLevel => widget.levelNumber == 9;
   
   // Get questions for the current page
   List<QuestionModel> get _currentPageQuestions {
@@ -777,11 +804,227 @@ class _WorksheetScreenState extends State<WorksheetScreen>
   /// Strip redundant English prefixes that are now shown once in the page
   /// instruction header instead of on every question card.
   String _displayQuestionText(String text) {
+    // Sequence prompts are rendered as boxes; collapse the raw form here.
+    if (text.startsWith('AFTER:')) {
+      final n = text.substring(6);
+      return '$n → ?';
+    }
     const prefixes = ['Solve: ', 'Factor: ', 'Simplify: ', 'Expand: ', 'Write: '];
     for (final p in prefixes) {
       if (text.startsWith(p)) return text.substring(p.length);
     }
     return text;
+  }
+
+  /// Renders a sequence prompt as two boxes: [N] → [answer/?]
+  Widget _buildSequenceBoxes(
+    String startNumber,
+    String? answer,
+    bool isAnswered,
+    bool isCorrect,
+  ) {
+    Color answerColor = AppColors.textLight;
+    Color answerBorder = AppColors.border;
+    String answerText = '?';
+    if (isAnswered) {
+      answerText = answer ?? '?';
+      answerColor = isCorrect ? AppColors.success : AppColors.error;
+      answerBorder = answerColor;
+    }
+    Widget box(String text, {required Color textColor, required Color border, Color? fill}) {
+      return Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: fill ?? AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: border, width: 2),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: textColor,
+            fontFamily: 'Nunito',
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        box(startNumber,
+            textColor: AppColors.textPrimary,
+            border: AppColors.border,
+            fill: AppColors.background),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6),
+          child: Icon(Icons.arrow_forward_rounded,
+              color: AppColors.textSecondary, size: 20),
+        ),
+        box(answerText, textColor: answerColor, border: answerBorder),
+      ],
+    );
+  }
+
+  /// Full row for sequence levels (level 9): [N] -> [answer box].
+  /// The selected row's answer box embeds a live HandwritingCanvas so the
+  /// child writes the answer directly inside it.
+  Widget _buildSequenceRow(QuestionModel question, int globalIndex) {
+    final isAnswered = _results[globalIndex] != null;
+    final isCorrect = _results[globalIndex] == true;
+    final isSelected = globalIndex == _currentQuestion;
+    final startNumber = question.questionText.startsWith('AFTER:')
+        ? question.questionText.substring(6)
+        : question.questionText;
+    final answer = _answers[globalIndex];
+
+    Color boxBorder;
+    if (isAnswered) {
+      boxBorder = isCorrect ? AppColors.success : AppColors.error;
+    } else if (isSelected) {
+      boxBorder = AppColors.primary;
+    } else {
+      boxBorder = AppColors.border;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (isSelected) return;
+        setState(() {
+          _currentQuestion = globalIndex;
+          _answerController.text = _answers[globalIndex] ?? '';
+          _handwritingText = _answers[globalIndex] ?? '';
+        });
+        // Clear the canvas state so the new row starts fresh
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _canvasKey.currentState?.clear();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1.2,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Question number badge
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isAnswered
+                    ? (isCorrect ? AppColors.success : AppColors.error)
+                    : AppColors.textLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${globalIndex + 1}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Start number box
+            Container(
+              width: 64,
+              height: 64,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border, width: 2),
+              ),
+              child: Text(
+                startNumber,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Icon(Icons.arrow_forward_rounded,
+                  color: AppColors.textSecondary, size: 26),
+            ),
+            // Answer box (inline canvas if selected, else static)
+            Expanded(
+              child: SizedBox(
+                height: 80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: boxBorder, width: 2),
+                    ),
+                    child: isSelected && !isAnswered
+                        ? HandwritingCanvas(
+                            key: _canvasKey,
+                            height: 76,
+                            enabled: true,
+                            compact: true,
+                            hintText: 'Write here',
+                            recognizedText: _handwritingText,
+                            onRecognized: (text) {
+                              setState(() {
+                                _handwritingText = text;
+                                _answerController.text = text;
+                              });
+                            },
+                          )
+                        : Center(
+                            child: Text(
+                              answer == null || answer.isEmpty ? '?' : answer,
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Nunito',
+                                color: isAnswered
+                                    ? (isCorrect
+                                        ? AppColors.success
+                                        : AppColors.error)
+                                    : AppColors.textLight,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+            if (isAnswered) ...[
+              const SizedBox(width: 8),
+              Icon(
+                isCorrect
+                    ? Icons.check_circle_rounded
+                    : Icons.cancel_rounded,
+                color: isCorrect ? AppColors.success : AppColors.error,
+                size: 24,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   /// One-line instruction shown above the question grid, based on level.
@@ -791,6 +1034,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
     final levelNum = _levelConfig?.level;
     if (type == null) return null;
     // Level-specific overrides (beginner-friendly wording)
+    if (levelNum == 9) return 'Write the number that comes next';
     if (levelNum == 21) return 'Write the fraction';
     switch (type) {
       case LevelType.factorization:

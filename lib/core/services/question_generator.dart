@@ -161,32 +161,26 @@ class QuestionGenerator {
   }
 
   // ===== SEQUENCE QUESTIONS (Level 9) =====
+  // For young kids: each question asks "What comes after N?" and the answer
+  // is written one number at a time (handwriting), shown as [N] -> [ ] boxes.
   QuestionModel _generateSequenceQuestion(
     LevelConfig config,
     String worksheetId,
     int questionNumber,
     int pageNumber,
   ) {
-    final start = _random.nextInt(90) + 1;
-    final step = _random.nextInt(3) + 1; // Step of 1, 2, or 3
-    final sequenceLength = 5;
-    final missingIndex = _random.nextInt(sequenceLength);
-    
-    final sequence = List.generate(sequenceLength, (i) => start + (step * i));
-    final missingValue = sequence[missingIndex];
-    
-    final displaySequence = sequence.map((n) {
-      return n == missingValue ? '?' : n.toString();
-    }).join(', ');
-
+    // Pick a starting number 1..49 so the answer fits in 2 digits.
+    final n = _random.nextInt(49) + 1;
     return QuestionModel(
       id: _uuid.v4(),
       worksheetId: worksheetId,
       questionNumber: questionNumber,
       pageNumber: pageNumber,
-      type: QuestionType.counting, // Use counting for sequences
-      questionText: displaySequence,
-      correctAnswer: missingValue.toString(),
+      // Tracing type so the handwriting canvas is used.
+      type: QuestionType.tracing,
+      // Special encoded prompt parsed by the worksheet UI to render boxes.
+      questionText: 'AFTER:$n',
+      correctAnswer: (n + 1).toString(),
     );
   }
 

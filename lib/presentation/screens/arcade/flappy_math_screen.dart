@@ -61,10 +61,8 @@ class _FlappyMathScreenState extends State<FlappyMathScreen> {
   @override
   Widget build(BuildContext context) {
     final q = _game.currentQuestion;
-    final showQuestion = _game.isStarted &&
-        !_game.isGameOver &&
-        q != null &&
-        !_game.questionAnswered;
+    // Question only appears as a rescue prompt when lives have run out
+    final showQuestion = _game.isAwaitingContinue && q != null;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -204,7 +202,7 @@ class _FlappyMathScreenState extends State<FlappyMathScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Fly through pipes  •  answer maths for +5 bonus',
+                      'Fly through pipes  •  answer maths to keep flying',
                       style:
                           TextStyle(color: Colors.white38, fontSize: 12),
                     ),
@@ -213,15 +211,20 @@ class _FlappyMathScreenState extends State<FlappyMathScreen> {
               ),
             ),
 
-          // ── Question card (bottom overlay) ─────────────────────────────
+          // ── Rescue question card (only shown when lives run out) ──────
           if (showQuestion)
-            Positioned(
-              bottom: 20,
-              left: 16,
-              right: 16,
-              child: _QuestionCard(
-                question: q,
-                onAnswer: (ans) => _game.answerQuestion(ans),
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.75),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _QuestionCard(
+                      question: q,
+                      onAnswer: (ans) => _game.answerQuestion(ans),
+                    ),
+                  ),
+                ),
               ),
             ),
 
@@ -417,11 +420,13 @@ class _QuestionCard extends StatelessWidget {
 class FlappyMathGame extends FlameGame {
   // ── public state (read by Flutter widget) ────────────────────────────────
   int score = 0;
-  int streak = 0; // consecutive correct answers (resets on wrong/hit)
+  int streak = 0; // consecutive correct rescues (resets on wrong)
   int lives = 3;
   bool isGameOver = false;
   bool isStarted = false;
   bool questionAnswered = true;
+  bool isAwaitingContinue = false; // shown when lives hit 0
+  bool _rescueUsed = false; // only one rescue per run
   ArcadeQuestion? currentQuestion;
   String? feedbackText;
   bool feedbackCorrect = true;
@@ -436,12 +441,10 @@ class FlappyMathGame extends FlameGame {
   final List<_PipeComponent> _pipes = [];
 
   double _pipeTimer = 0;
-  double _questionTimer = 0;
   double _feedbackTimer = 0;
   double _hitCooldown = 0;
 
   static const double _pipeInterval = 2.2;
-  static const double _questionInterval = 8.0;
   static const double _feedbackDuration = 1.2;
   static const double _hitCooldownDuration = 1.5;
 
@@ -461,7 +464,7 @@ class FlappyMathGame extends FlameGame {
 
   // Called by Flutter GestureDetector
   void tap() {
-    if (isGameOver) return;
+    if (isGameOver || isAwaitingContinue) return;
     if (!isStarted) {
       isStarted = true;
       onStateChanged();
@@ -469,27 +472,36 @@ class FlappyMathGame extends FlameGame {
     _bird.flap();
   }
 
-  // Called by answer buttons
+  // Called by answer buttons in the rescue prompt
   void answerQuestion(int answer) {
-    if (currentQuestion == null || questionAnswered) return;
-    questionAnswered = true;
-    if (answer == currentQuestion!.correctAnswer) {
+    if (currentQuestion == null || !isAwaitingContinue) return;
+    final correct = answer == currentQuestion!.correctAnswer;
+    isAwaitingContinue = false;
+    currentQuestion = null;
+    if (correct) {
       streak++;
-      // Streak multiplier: +5, +7, +10, +15, +20...
-      final bonus = 5 + (streak - 1) * 2 + (streak >= 3 ? 3 : 0);
-      score += bonus;
-      _bird.flap(); // bonus flap
-      feedbackText = streak >= 2
-          ? '+$bonus  ${streak}x streak!'
-          : '+$bonus Correct!';
+      lives = 3; // full rescue
+      feedbackText = 'Saved! +3 lives';
       feedbackCorrect = true;
+      _feedbackTimer = _feedbackDuration;
+      _hitCooldown = _hitCooldownDuration;
+      // Reset bird & clear pipes so the player gets a fair restart
+      _bird.position = Vector2(size.x * 0.25, size.y * 0.5);
+      _bird.velocity = 0;
+      for (final p in List.of(_pipes)) {
+        p.removeFromParent();
+      }
+      _pipes.clear();
+      _pipeTimer = 0;
+      resumeEngine();
     } else {
       streak = 0;
-      feedbackText = 'Wrong! -1 life';
+      feedbackText = 'Wrong answer';
       feedbackCorrect = false;
-      _applyHit();
+      _feedbackTimer = _feedbackDuration;
+      isGameOver = true;
+      resumeEngine();
     }
-    _feedbackTimer = _feedbackDuration;
     onStateChanged();
   }
 
@@ -507,24 +519,13 @@ class FlappyMathGame extends FlameGame {
       }
     }
 
-    if (!isStarted || isGameOver) return;
+    if (!isStarted || isGameOver || isAwaitingContinue) return;
 
     // Spawn pipes
     _pipeTimer += dt;
     if (_pipeTimer >= _pipeInterval) {
       _pipeTimer = 0;
       _spawnPipe();
-    }
-
-    // Question timer
-    if (questionAnswered) {
-      _questionTimer += dt;
-      if (_questionTimer >= _questionInterval) {
-        _questionTimer = 0;
-        questionAnswered = false;
-        currentQuestion = _qGen.generate(choiceCount: 2);
-        onStateChanged();
-      }
     }
 
     // Pipe scoring + collision
@@ -601,6 +602,15 @@ class FlappyMathGame extends FlameGame {
     lives--;
     if (lives <= 0) {
       lives = 0;
+      if (!_rescueUsed) {
+        // Offer a math question rescue prompt instead of instant game-over
+        _rescueUsed = true;
+        isAwaitingContinue = true;
+        currentQuestion = _qGen.generate(choiceCount: 2);
+        pauseEngine();
+        onStateChanged();
+        return;
+      }
       isGameOver = true;
       onStateChanged();
       return;

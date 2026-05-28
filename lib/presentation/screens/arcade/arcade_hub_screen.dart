@@ -34,6 +34,12 @@ class _ArcadeHubScreenState extends State<ArcadeHubScreen> {
         'flappy': prefs.getInt('arcade_hs_flappy_${widget.child.id}') ?? 0,
         'balloon': prefs.getInt('arcade_hs_balloon_${widget.child.id}') ?? 0,
         'runner': prefs.getInt('arcade_hs_runner_${widget.child.id}') ?? 0,
+        'animal_rescue':
+            prefs.getInt('arcade_hs_animal_rescue_${widget.child.id}') ?? 0,
+        'cannon_aim':
+            prefs.getInt('arcade_hs_cannon_aim_${widget.child.id}') ?? 0,
+        'snowball':
+            prefs.getInt('arcade_hs_snowball_${widget.child.id}') ?? 0,
       };
       _isLoading = false;
     });
@@ -65,6 +71,33 @@ class _ArcadeHubScreenState extends State<ArcadeHubScreen> {
       icon: Icons.directions_run_rounded,
       color: Color(0xFFFF8A3D),
       route: '/arcade/runner',
+      available: true,
+    ),
+    _ArcadeGameDef(
+      key: 'animal_rescue',
+      title: 'Animal Rescue',
+      subtitle: 'Free trapped animals by solving math',
+      icon: Icons.pets_rounded,
+      color: Color(0xFF7CC576),
+      route: '/arcade/animal-rescue',
+      available: true,
+    ),
+    _ArcadeGameDef(
+      key: 'cannon_aim',
+      title: 'Cannon Aim',
+      subtitle: 'Shoot the right answer before it drifts away',
+      icon: Icons.gps_fixed_rounded,
+      color: Color(0xFFE05A5A),
+      route: '/arcade/cannon-aim',
+      available: true,
+    ),
+    _ArcadeGameDef(
+      key: 'snowball',
+      title: 'Snowball Fight',
+      subtitle: 'Knock out the number that doesn\u2019t belong',
+      icon: Icons.ac_unit_rounded,
+      color: Color(0xFF6CA9E0),
+      route: '/arcade/snowball',
       available: true,
     ),
   ];

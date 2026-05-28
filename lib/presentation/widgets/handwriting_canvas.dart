@@ -16,12 +16,22 @@ class HandwritingCanvas extends StatefulWidget {
   /// Current recognized text (for display)
   final String? recognizedText;
 
+  /// Compact mode: skips the outer decoration and the
+  /// recognized-text + clear-button controls row. Use when embedding the
+  /// canvas inside another bordered container (e.g. an answer box).
+  final bool compact;
+
+  /// Hint text shown when the canvas is empty.
+  final String? hintText;
+
   const HandwritingCanvas({
     super.key,
     required this.onRecognized,
     this.height = 200,
     this.enabled = true,
     this.recognizedText,
+    this.compact = false,
+    this.hintText,
   });
 
   @override
@@ -192,6 +202,18 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
   }
 
   Widget _buildLoadingState() {
+    if (widget.compact) {
+      return SizedBox(
+        height: widget.height,
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
     return Container(
       height: widget.height,
       decoration: BoxDecoration(
@@ -273,6 +295,75 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
   }
 
   Widget _buildCanvas() {
+    final canvasInner = ClipRRect(
+      borderRadius: BorderRadius.circular(widget.compact ? 12 : 14),
+      child: Stack(
+        children: [
+          // Drawing background with guide lines (skip in compact mode)
+          if (!widget.compact)
+            CustomPaint(
+              size: Size.infinite,
+              painter: _GuideLinesPainter(),
+            ),
+          // Drawing area
+          GestureDetector(
+            onPanStart: _onPanStart,
+            onPanUpdate: _onPanUpdate,
+            onPanEnd: _onPanEnd,
+            child: CustomPaint(
+              size: Size.infinite,
+              painter: _StrokePainter(
+                strokes: _strokes,
+                currentStroke: _currentStroke,
+              ),
+            ),
+          ),
+          // Hint text when empty
+          if (_strokes.isEmpty && _currentStroke.isEmpty)
+            IgnorePointer(
+              child: Center(
+                child: Text(
+                  widget.hintText ?? 'Write your answer here',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: widget.compact ? 14 : 18,
+                  ),
+                ),
+              ),
+            ),
+          // Recognition indicator
+          if (_isRecognizing)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (widget.compact) {
+      // Borderless: parent provides the box decoration
+      return SizedBox(height: widget.height, child: canvasInner);
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -294,79 +385,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Stack(
-              children: [
-                // Drawing background with guide lines
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: _GuideLinesPainter(),
-                ),
-                // Drawing area
-                GestureDetector(
-                  onPanStart: _onPanStart,
-                  onPanUpdate: _onPanUpdate,
-                  onPanEnd: _onPanEnd,
-                  child: CustomPaint(
-                    size: Size.infinite,
-                    painter: _StrokePainter(
-                      strokes: _strokes,
-                      currentStroke: _currentStroke,
-                    ),
-                  ),
-                ),
-                // Hint text when empty
-                if (_strokes.isEmpty && _currentStroke.isEmpty)
-                  Center(
-                    child: Text(
-                      'Write your answer here',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                // Recognition indicator
-                if (_isRecognizing)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.blue[700],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Reading...',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          child: canvasInner,
         ),
         const SizedBox(height: 8),
         // Controls row
