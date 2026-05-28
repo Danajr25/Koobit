@@ -784,11 +784,14 @@ class _WorksheetScreenState extends State<WorksheetScreen>
     return text;
   }
 
-  /// One-line instruction shown above the question grid, based on level type.
+  /// One-line instruction shown above the question grid, based on level.
   /// Returns null when no banner is needed (questions are already self-explanatory).
   String? _instructionForLevel() {
     final type = _levelConfig?.type;
+    final levelNum = _levelConfig?.level;
     if (type == null) return null;
+    // Level-specific overrides (beginner-friendly wording)
+    if (levelNum == 21) return 'Write the fraction';
     switch (type) {
       case LevelType.factorization:
         return 'Factor each expression';
@@ -797,7 +800,7 @@ class _WorksheetScreenState extends State<WorksheetScreen>
       case LevelType.algebra:
         return 'Solve for x';
       case LevelType.fractions:
-        return 'Simplify each fraction';
+        return 'Add the fractions';
       case LevelType.polynomials:
         return 'Expand each expression';
       case LevelType.numberWriting:

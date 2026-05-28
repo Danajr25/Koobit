@@ -349,34 +349,36 @@ class QuestionGenerator {
     int pageNumber,
   ) {
     switch (config.level) {
-      case 21: // Basic fractions
-        final numerator = _random.nextInt(9) + 1;
-        final denominator = _random.nextInt(9) + 2;
+      case 21: // Recognize basic fractions (beginner)
+        // Ask in plain language: "X parts out of Y" so kids learn what a
+        // fraction means before doing any math on it.
+        final denominator = _random.nextInt(5) + 2; // 2..6
+        final numerator = _random.nextInt(denominator - 1) + 1; // 1..den-1
         return QuestionModel(
           id: _uuid.v4(),
           worksheetId: worksheetId,
           questionNumber: questionNumber,
           pageNumber: pageNumber,
           type: QuestionType.fraction,
-          questionText: 'Simplify: $numerator/$denominator',
-          correctAnswer: _simplifyFraction(numerator, denominator),
+          questionText: '$numerator out of $denominator',
+          correctAnswer: '$numerator/$denominator',
         );
-      case 22: // Fraction operations
-        final n1 = _random.nextInt(4) + 1;
+      case 22: // Fraction operations (same denominator)
         final d1 = _random.nextInt(4) + 2;
-        final n2 = _random.nextInt(4) + 1;
-        final d2 = d1; // Same denominator for simplicity
+        final n1 = _random.nextInt(d1 - 1) + 1;
+        final n2 = _random.nextInt(d1 - n1) + 1;
         return QuestionModel(
           id: _uuid.v4(),
           worksheetId: worksheetId,
           questionNumber: questionNumber,
           pageNumber: pageNumber,
           type: QuestionType.fraction,
-          questionText: '$n1/$d1 + $n2/$d2 = ',
+          questionText: '$n1/$d1 + $n2/$d1 = ',
           correctAnswer: _simplifyFraction(n1 + n2, d1),
         );
       default:
-        return _generateBasicFractionQuestion(config, worksheetId, questionNumber, pageNumber);
+        return _generateBasicFractionQuestion(
+            config, worksheetId, questionNumber, pageNumber);
     }
   }
 
